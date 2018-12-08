@@ -37,10 +37,4 @@
 #ifndef __MPI_TOCTA_SEARCH_H
 #define __MPI_TOCTA_SEARCH_H
 
-	#define PRT_COMPLEX(c) printf("(%2.0f,%2.0f) ", GSL_REAL(c), GSL_IMAG(c));
-	#define NL { printf("\n"); }
-	// this define returns a p_gvc from a gsl_vector_ulong object
-	#define GVC_PTR(gvu, index) ((p_gvc)(*(gvu->data + index)))
-	#define COMPLEX_EQUAL(a,b) ((GSL_REAL(a)==GSL_REAL(b))&&(GSL_IMAG(a)==GSL_IMAG(b) ? 1 : 0))
-
 #endif

@@ -23,8 +23,6 @@
 
 #include "../include/toolbox.h"
 
-
-
 //====================Comparison Function====================
 int cmp_gsv(const void* p1, const void* p2) {
 	
@@ -90,16 +88,6 @@ int count_pairs_by_row(gsl_matrix_complex** wspace, int nrows) {
 		printf("Data error: count_pairs_by_row\n");
 		return 0;
 	}
-	
-#if(0)		
-	// DEBUG - print test area
-	printf("\nTest area\n");
-	for(int r = 0; r < nrows; ++r) {
-		for(int c = 0; c < 4; ++c) PRT_COMPLEX(gsl_matrix_complex_get(*wspace,r,c));
-		NL;
-	}
-	NL;
-#endif		
 
 	// This function is faster
 	int r0, c0, r1, c1;
