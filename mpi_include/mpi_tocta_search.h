@@ -35,5 +35,6 @@
 	#include <gsl/gsl_matrix.h>
 	
 	#include "../mpi_include/toolbox.h"	
+	#include "../mpi_include/get_options.h"
 	
 #endif

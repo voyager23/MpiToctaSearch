@@ -35,7 +35,7 @@ prepare_equalsums.o : prepare_equalsums.c prepare_equalsums.h
 #-----------------------------------------------------------------------
 
 go :
-	 mpirun -host jupiter:8 ../bin/mts
+	 mpirun -host jupiter:8 ../bin/mts -t 09,19
 	 
 #-----------------------------------------------------------------------
 

@@ -32,6 +32,10 @@ int main(int argc, char* argv[])
     char version[MPI_MAX_LIBRARY_VERSION_STRING];
     char pname[MPI_MAX_PROCESSOR_NAME];
     
+    gsl_complex target;
+    int quiet = 0;
+    int list  = 0;
+    
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -41,9 +45,13 @@ int main(int argc, char* argv[])
     if (rank != 0) {
 		printf("Hello, world, I am %d of %d \t(%s)\n",rank, size, pname);
 		fflush(stdout);
-	} else {
-		printf("Hello, world, I am Root of %d \t(%s)\n",size, pname);
+	} else { // Root Process
+		printf("Hello, world, I am Root of %d \t(%s) ",size, pname);
+		
+		PRT_COMPLEX(target); NL;
+		
 		fflush(stdout);
+		
 	}
 	
     MPI_Finalize();
