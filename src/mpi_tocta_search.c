@@ -27,58 +27,21 @@
 //======================================================================
 int main(int argc, char **argv)
 {
+
 	gsl_vector_ulong* equalsums = NULL;
 	int solns;
 	GList* AllSolutions = NULL;
 	GList* SolutionLists = NULL;
-	gsl_complex target;
-	char base_name[128];	
 
-	
-	// get options from command line
+	// get these options from command line
+	gsl_complex target;
 	int q_flag = 0;
 	int l_flag = 0;
-	char *t_value = "0,0";
-	int c, sf, r, i;
 	
-	while ((c = getopt (argc, argv, "qlt:")) != -1)
-	switch (c)
-		{
-		case 'q':
-		q_flag = 1;
-		break;
-		case 'l':
-		l_flag = 1;
-		break;
-		case 't':
-		t_value = optarg;
-		break;
-		case '?':
-		if (optopt == 't')
-		fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-		else if (isprint (optopt))
-		fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-		else
-		fprintf (stderr,
-		"Unknown option character `\\x%x'.\n",
-		optopt);
-		return 1;
-		default:
-		abort ();
-	}	
-
+	get_options(argc, argv, &target, &q_flag, &l_flag);
+	
 	// display flags
-	// printf("q_flag: %d     l_flag: %d     t_value: %s \n", q_flag, l_flag, t_value);
-	if(q_flag == 1) printf("Quiet flag (q) not implemented.\n");
-	if(l_flag == 1) printf("List-target flag (l) not implemented.\n\n");
-	sf = sscanf(t_value, "%d,%d", &r, &i);
-	if(sf != 2) {
-		printf("Could not parse the requested target.\n");
-		exit(1);
-	} else {
-		// set target value
-		GSL_SET_COMPLEX(&target, (double)r, (double)i);
-	}
+	// printf("q_flag: %d     l_flag: %d\n", q_flag, l_flag);
 	
 	prepare_equalsums("../data/equalsums_database.bin", &equalsums, &target);
 	printf("equalsums->size: %lu\n", equalsums->size);

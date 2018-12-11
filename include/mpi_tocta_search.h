@@ -21,7 +21,6 @@
  * 
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -31,10 +30,12 @@
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_matrix.h>
-#include "../include/toolbox.h"
+
 #include "../include/prepare_equalsums.h"
+#include "../include/get_options.h"
 
 #ifndef __MPI_TOCTA_SEARCH_H
 #define __MPI_TOCTA_SEARCH_H
+
 
 #endif

@@ -28,7 +28,6 @@ void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *t
 	// Target value has been set by input function
 	
 	FILE *fin;
-	// double real, imag;
 	int result;
 	
 	fin = fopen(fname,"rb");
@@ -57,7 +56,8 @@ void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *t
 	
 	// Allocate the equalsums gsl_vector_ulong
 	*equalsums = gsl_vector_ulong_calloc(match_count*24);
-	int idx = 0;	// Indicates the position to store data in vector
+	
+	int idx = 0;			// Position to store data in vector of pointers
 	rewind(fin);	
 	gsl_permutation *vector_perm = gsl_permutation_alloc(4);
 	while(gsl_vector_complex_fread(fin,buffer) != GSL_EFAILED) { // Pass 2
@@ -69,17 +69,21 @@ void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *t
 		gsl_permutation_init(vector_perm);	// Identity permutation
 		//---------------Permutations----------------------
 		do {
-			gsl_vector_complex *copy = gsl_vector_complex_alloc(4);
-			// copy buffer vector to copy vector
-			for(int s = 1, d = 0; s < 5; ++s,++d) gsl_vector_complex_set(copy, d, gsl_vector_complex_get(buffer, s)); 
-			gsl_permute_vector_complex((const gsl_permutation *)vector_perm, copy);
+			gsl_vector_complex *working = gsl_vector_complex_alloc(4);
+			// copy buffer vector to working vector
+			for(int s = 1, d = 0; s < 5; ++s,++d) gsl_vector_complex_set(working, d, gsl_vector_complex_get(buffer, s)); 
+			gsl_permute_vector_complex((const gsl_permutation *)vector_perm, working);
 			//for(int x = 0; x < 4; ++x) PRT_COMPLEX(gsl_vector_complex_get(copy,x));
 			//NL;
 			// Update equalsums
-			gsl_vector_ulong_set(*equalsums, idx++, (uintptr_t)copy);
+			gsl_vector_ulong_set(*equalsums, idx, (uintptr_t)working);			
+			// Increment index
+			idx += 1;			
 		} while(gsl_permutation_next(vector_perm) == GSL_SUCCESS);
+		
 		// Keep target value updated
-		*target = (gsl_vector_complex_get(buffer,0));		
+		*target = (gsl_vector_complex_get(buffer,0));
+				
 	} // Pass 2
 	
 	gsl_set_error_handler(old_handler);	// Restore error handler
@@ -90,7 +94,28 @@ void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *t
 	qsort((*equalsums)->data, match_count*24, sizeof(uintptr_t), cmp_gsv);
 	printf("complete.\n");
 	
-	// Cleanup code as required
+	// Write the contiguous version of equalsums for use by MPI Broadcast
+	gsl_vector_complex *compact = gsl_vector_complex_calloc(match_count*24*4);
+	double *src = NULL;
+	double *dst = NULL;
+	for(int i = 0; i < (*equalsums)->size; ++i) {
+		gsl_vector_complex *p_gvc = (gsl_vector_complex*)gsl_vector_ulong_get(*equalsums,i);
+		src = p_gvc->data;
+		dst = (double*)gsl_vector_complex_ptr(compact, i*4);
+		memcpy(dst, src, sizeof(double)*2*4);
+	}
+	
+		// debug print of complex for confirmation
+		int lines = 0;
+		for(int i = 0; i < compact->size; i += 4) {
+			for(int j = 0; j < 4; ++j) PRT_COMPLEX(gsl_vector_complex_get(compact,(i+j)));
+			NL;
+			lines += 1;
+			if((lines % 4) == 0) NL;
+		}
+
+
+	// ---------------Cleanup code as required--------------- //
 	gsl_vector_complex_free(buffer);
 	gsl_permutation_free(vector_perm);
 }

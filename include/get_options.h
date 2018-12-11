@@ -1,5 +1,5 @@
 /*
- * prepare_equalsums.h
+ * get_options.h
  * 
  * Copyright 2018 mike <mike@mike-XPS-Mint19>
  * 
@@ -21,18 +21,16 @@
  * 
  */
 
-#ifndef __PREPARE_EQUALSUMS_H
-#define __PREPARE_EQUALSUMS_H
-
-	#include <stdlib.h>
+#ifndef __GET_OPTIONS_H__
+#define __GET_OPTIONS_H__
+	
 	#include <stdio.h>
-	#include <stdint.h>
-	#include <string.h>
-	#include <gsl/gsl_vector.h>
-	#include <gsl/gsl_permutation.h>
-	#include <gsl/gsl_permute_vector.h>
-	#include "../include/toolbox.h"
+	#include <stdlib.h>
+	#include <ctype.h>
+	#include <gsl/gsl_complex.h>
+	#include <gsl/gsl_complex_math.h>
+	#include <getopt.h>
 
-	void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *target);
+	int get_options(int argc, char **argv, gsl_complex *p_target, int *quiet, int *list);
 
 #endif
