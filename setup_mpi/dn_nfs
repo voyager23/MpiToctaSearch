@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "x`/bin/hostname`" == "xjupiter" ]
+then
+	echo "Unmounting NFS on Mint19"
+	ssh mike@mint19 'sudo umount /home/mike/wdir'
+	ssh mike@mint19 'sudo umount /home/mike/openmpi-4.0.0'
+fi

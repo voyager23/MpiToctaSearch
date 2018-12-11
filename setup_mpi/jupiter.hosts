@@ -1,0 +1,8 @@
+# filename: machinefile.server_ctl
+# Wed Dec  5 12:19:05 2018
+#C6100-1 slots=8
+#C6100-2 slots=8
+#C6100-3 slots=8
+#C6100-4 slots=8
+#mint19 slots=8
+jupiter slots=8
