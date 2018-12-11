@@ -106,13 +106,12 @@ void prepare_equalsums(char *fname, gsl_vector_ulong **equalsums, gsl_complex *t
 	}
 	
 		// debug print of complex for confirmation
-		int lines = 0;
 		for(int i = 0; i < compact->size; i += 4) {
+			printf("%03d)\t", i);
 			for(int j = 0; j < 4; ++j) PRT_COMPLEX(gsl_vector_complex_get(compact,(i+j)));
 			NL;
-			lines += 1;
-			if((lines % 4) == 0) NL;
 		}
+		printf("Compact->size: %ld\n", compact->size);
 
 
 	// ---------------Cleanup code as required--------------- //
