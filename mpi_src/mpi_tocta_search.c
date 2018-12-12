@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
 		// Prepare a contiguous vector of complex numbers using equalsums_database.bin
 		// Each group of 4 represents an equalsum of target value.
 		// ??Create a checksum??
+		
 		compact_equalsums("../data/equalsums_database.bin", &compact, &target);		
 		
 		// Broadcast/Send vector to work processes.

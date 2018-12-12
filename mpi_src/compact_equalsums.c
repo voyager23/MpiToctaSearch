@@ -91,7 +91,7 @@ void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *t
 	printf("Match_count: %d\n", match_count);
 	
 	// ---------- Sort equalsums----------  //
-	printf("Sorting equalsums...");
+	printf("Sorting local_eqsums...%d items ", match_count*24);
 	qsort(local_eqsums->data, match_count*24, sizeof(uintptr_t), cmp_gsv);
 	printf("complete.\n");
 	
