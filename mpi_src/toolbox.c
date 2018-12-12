@@ -21,7 +21,7 @@
  * 
  */
 
-#include "../include/toolbox.h"
+#include "../mpi_include/toolbox.h"
 
 //====================Comparison Function====================
 int cmp_gsv(const void* p1, const void* p2) {

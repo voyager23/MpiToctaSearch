@@ -22,7 +22,7 @@
  */
 
 
-#include "../include/mpi_tocta_search.h"
+#include "../mpi_include/mpi_tocta_search.h"
 
 #include "mpi.h"
 
@@ -36,21 +36,34 @@ int main(int argc, char* argv[])
     int quiet = 0;
     int list  = 0;
     
-
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Get_library_version(version, &len);
     MPI_Get_processor_name(pname, &len);
-    if (rank != 0) {
+    if (rank != 0) {	
+		
+		// Work Process
 		printf("Hello, world, I am %d of %d \t(%s)\n",rank, size, pname);
 		fflush(stdout);
-	} else { // Root Process
+		
+	} else {			
+		
+		// Root Process
+		gsl_vector_complex *compact = NULL;
+		
 		printf("Hello, world, I am Root of %d \t(%s) ",size, pname);
-		
+		get_options(argc, argv, &target, &quiet, &list);
 		PRT_COMPLEX(target); NL;
-		
+		printf("Quiet: %d	List: %d \n", quiet, list);		
 		fflush(stdout);
+		// Prepare a contiguous vector of complex numbers using equalsums_database.bin
+		// Each group of 4 represents an equalsum of target value.
+		// ??Create a checksum??
+		compact_equalsums("../data/equalsums_database.bin", &compact, &target);		
+		
+		// Broadcast/Send vector to work processes.
+		// ??Receive/confirm checksum??
 		
 	}
 	

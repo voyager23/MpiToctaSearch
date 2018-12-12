@@ -1,7 +1,7 @@
 /*
- * mpi_tocta_search.h
+ * compact_equalsums.h
  * 
- * Copyright 2018 mike <mike@jupiter>
+ * Copyright 2018 mike <mike@mike-XPS-Mint19>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,22 +20,19 @@
  * 
  * 
  */
- 
-#ifndef __MPI_TOCTA_SEARCH_H
-#define __MPI_TOCTA_SEARCH_H
 
-	#include <stdio.h>
+#ifndef __COMPACT_EQUALSUMS_H
+#define __COMPACT_EQUALSUMS_H
+
 	#include <stdlib.h>
-	#include <ctype.h>
-	#include <getopt.h>
-	#include <glib.h>
+	#include <stdio.h>
+	#include <stdint.h>
+	#include <string.h>
 	#include <gsl/gsl_vector.h>
-	#include <gsl/gsl_complex.h>
-	#include <gsl/gsl_complex_math.h>
-	#include <gsl/gsl_matrix.h>
-	
-	#include "../mpi_include/toolbox.h"	
-	#include "../mpi_include/get_options.h"
-	#include "../mpi_include/compact_equalsums.h"
-	
+	#include <gsl/gsl_permutation.h>
+	#include <gsl/gsl_permute_vector.h>
+	#include "../mpi_include/toolbox.h"
+
+	void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *target);
+
 #endif
