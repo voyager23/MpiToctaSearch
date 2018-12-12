@@ -35,8 +35,8 @@ compact_equalsums.o : compact_equalsums.c  $(HDRS)
 #-----------------------------------------------------------------------
 
 go :
-#####mpirun -host jupiter:8 ../bin/mts -t 09,19
-	 mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
+	mpirun -host jupiter:8 ../bin/mts -t 09,19
+#   mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
 	 
 #-----------------------------------------------------------------------
 
