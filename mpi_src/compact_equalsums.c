@@ -105,18 +105,28 @@ void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *t
 		dst = (double*)gsl_vector_complex_ptr(*compact, i*4);
 		memcpy(dst, src, sizeof(double)*2*4);
 	}
-	
+
+#if(0)
 		// debug print of complex for confirmation
 		for(int i = 0; i < (*compact)->size; i += 4) {
 			printf("%03d)\t", i);
 			for(int j = 0; j < 4; ++j) PRT_COMPLEX(gsl_vector_complex_get(*compact,(i+j)));
 			NL;
 		}
-		printf("Compact->size: %ld\n", (*compact)->size);
+#endif
+
+		printf("Compact->size: %ld double_count: %ld\n", (*compact)->size, 2*(*compact)->size);
 
 
 	// ---------------Cleanup code as required--------------- //
 	gsl_vector_complex_free(buffer);
 	gsl_permutation_free(vector_perm);
+	// free local_equalsums which is a vector of pointers to vector_complex(4);
+	for(int i = 0; i < local_eqsums->size; ++i) {
+		gsl_vector_complex *p_gvc = (gsl_vector_complex*)gsl_vector_ulong_get(local_eqsums,i);
+		gsl_vector_complex_free(p_gvc);
+	}
+	gsl_vector_ulong_free(local_eqsums);
+	// ---------------Done---------------- //
 }
 
