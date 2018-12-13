@@ -21,10 +21,9 @@
  * 
  */
 
-
-#include "../mpi_include/mpi_tocta_search.h"
-
 #include "mpi.h"
+#include "../mpi_include/mpi_tocta_search.h"
+#include "../libcrc/include/checksum.h"
 
 int main(int argc, char* argv[])
 {
@@ -52,22 +51,38 @@ int main(int argc, char* argv[])
 		
 		int result_code = 0;
 		MPI_Status status;
-		int double_count = 0;
+		int complex_count = 0;
 		gsl_vector_complex* compact = NULL;
 		
-		result_code = MPI_Bcast(&double_count, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
+		result_code = MPI_Bcast(&complex_count, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 		if(result_code != MPI_SUCCESS) printf("\nWork process %d reports Bcast error.\n", rank);		
-		printf("Process %d received %d as double_count.\n", rank, double_count); fflush(stdout);
-		compact = gsl_vector_complex_calloc(double_count / 2);
-		MPI_Bcast(compact->data, double_count, MPI_DOUBLE, ROOT, MPI_COMM_WORLD);
-		printf("BCast received.\n");
+		printf("Process %d received %d as complex_count.\n", rank, complex_count); fflush(stdout);
+		compact = gsl_vector_complex_calloc(complex_count);
+		MPI_Bcast(compact->data, complex_count, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		
+		// Create a checksum
+		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
+		printf("BCast received @ (%d) - Checksum %0X\n", rank, chksum);
+		
+		// Reformat the compact vector into the qualsums format 
+		// which is a gsl_vector_ulong of gsl_vector_complex.
+		gsl_vector_ulong* local_eqsums = gsl_vector_ulong_calloc(complex_count / 4);
+		for(int i = 0; i < compact->size; i += 4) {
+			gsl_vector_complex* p_gvc = gsl_vector_complex_calloc(4);
+			double* dest = p_gvc->data;
+			double* src  = (double*)gsl_vector_complex_ptr(compact, i);
+			memcpy(dest, src, sizeof(double) * 4 * 2);
+			gsl_vector_ulong_set(local_eqsums, (i/4), (ulong)p_gvc);
+		}
+		gsl_vector_complex_free(compact);
+		// establish the range of indexes used for the 'a' pointer.
+		// first = rank-1; limit is local_eqsums->size; stride is world_size-1
 		
 	} else {		
 		// Root Process
 		
 		int result_code;
 		gsl_vector_complex *compact = NULL;
-		int nDoubles = 0;
 		
 		// printf("Hello, world, I am Root of %d \t(%s) ",size, pname);
 		get_options(argc, argv, &target, &quiet, &list);
@@ -75,16 +90,17 @@ int main(int argc, char* argv[])
 		fflush(stdout);
 		// Prepare a contiguous vector of complex numbers (compact) using equalsums_database.bin
 		// Each group of 4 represents an equalsum of target value.
-		// ??Create a checksum??
 		
-		compact_equalsums("../data/equalsums_database.bin", &compact, &target);
-		nDoubles = (compact->size) * 2;			
+		compact_equalsums("../data/equalsums_database.bin", &compact, &target);			
 		// Broadcast number of doubles in main message
-		if(MPI_SUCCESS != MPI_Bcast(&nDoubles, 1, MPI_INT, ROOT, MPI_COMM_WORLD)) 
+		if(MPI_SUCCESS != MPI_Bcast(&(compact->size), 1, MPI_INT, ROOT, MPI_COMM_WORLD)) 
 			printf("\nWork process %d reports Bcast error.\n", rank);
 		// Broadcast the doubles
-		MPI_Bcast(compact->data, nDoubles, MPI_DOUBLE, ROOT, MPI_COMM_WORLD);
+		MPI_Bcast(compact->data, compact->size, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		printf("Bcast completed.\n");
+		// Create a checksum
+		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
+		printf("Root Checksum: %0X\n", chksum);
 						
 	}
 	

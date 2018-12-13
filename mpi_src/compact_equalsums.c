@@ -115,7 +115,7 @@ void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *t
 		}
 #endif
 
-		printf("Compact->size: %ld double_count: %ld\n", (*compact)->size, 2*(*compact)->size);
+		printf("Compact->size: %ld\n", (*compact)->size);
 
 
 	// ---------------Cleanup code as required--------------- //
