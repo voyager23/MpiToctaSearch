@@ -1,5 +1,5 @@
 /*
- * search_all_solutions.c
+ * mpi_subset_search.c
  * 
  * Copyright 2018 mike <mike@mike-XPS-15-9560>
  * 
@@ -28,10 +28,19 @@
 
 #include "../mpi_include/mpi_tocta_search.h"
 #include "../mpi_include/toolbox.h"
-#include "../mpi_include/search_all_solutions.h"
+#include "../mpi_include/mpi_subset_search.h"
 
-void search_all_solutions(GList** AllSolutions, p_gvu* equalsums, gsl_complex* target) {
-	/* 
+int mpi_subset_search(gsl_vector_ulong** equalsums, gsl_complex* target) {
+	/* Modified for use by MPI.
+	 * Each work process has a local copy of the equalsums vector and parameters
+	 * of world-rank and world-size. The work process searches a subset of equalsums
+	 * as follows:
+	 * 	first = rank - 1 (root does not participate)
+	 * 	last = local_eqsums->size (sentinel)
+	 * 	stride = world_size - 1 (root does not participate)
+	 * 	input parameters are local_eqsums and target
+	 * 	returns a count of solutions found
+	 * 
 	 * 		a f b e
 	 *		b h c g
 	 * 		c j d i
@@ -64,7 +73,14 @@ void search_all_solutions(GList** AllSolutions, p_gvu* equalsums, gsl_complex* t
 		exit(1);
 	}
 	
-	*AllSolutions = NULL;
+	// ===== DEBUG STOP = REMOVE BEFORE FLIGHT =
+	printf("mpi_subset_search - debug return 0\n");
+	return 0;
+	// ===== END DEBUG STOP ====================
+	
+	
+	
+	// *AllSolutions = NULL;
 	const int nsums = (*equalsums)->size;
 	gsl_matrix_complex* wspace = gsl_matrix_complex_alloc(4,4);
 	gsl_vector_complex* zero = gsl_vector_complex_calloc(4);
@@ -100,7 +116,7 @@ void search_all_solutions(GList** AllSolutions, p_gvu* equalsums, gsl_complex* t
 					 }
 					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
 					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
-					 *AllSolutions = g_list_insert_sorted(*AllSolutions, wspace_copy, compare_gsl_matrix_complex);
+					 // *AllSolutions = g_list_insert_sorted(*AllSolutions, wspace_copy, compare_gsl_matrix_complex);
 
 				 }
 			} // for c...

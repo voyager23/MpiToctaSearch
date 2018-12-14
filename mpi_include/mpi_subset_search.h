@@ -1,5 +1,5 @@
 /*
- * search_all_solutions.h
+ * mpi_subset_search.h
  * 
  * Copyright 2018 mike <mike@mike-XPS-15-9560>
  * 
@@ -27,7 +27,7 @@
 #ifndef __SEARCH_RECORD_H__
 #define __SEARCH_RECORD_H__
 
-	void search_all_solutions(GList** AllSolutions, p_gvu* equalsums, gsl_complex* target);
+	int mpi_subset_search(gsl_vector_ulong** equalsums, gsl_complex* target);
 	int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
 
 

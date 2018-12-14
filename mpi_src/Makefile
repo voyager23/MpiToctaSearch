@@ -7,9 +7,9 @@ CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl`
 
-OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o search_all_solutions.o
+OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o mpi_subset_search.o
 
-HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h search_all_solutions.h
+HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h mpi_subset_search.h
 
 OBJS = $(addprefix ../build/, $(OBJECTS) )
 HDRS = $(addprefix ../mpi_include/, $(HEADERS))
@@ -33,7 +33,7 @@ toolbox.o : toolbox.c  $(HDRS)
 compact_equalsums.o : compact_equalsums.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 	
-search_all_solutions.o : search_all_solutions.c  $(HDRS)
+mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 	
 #-----------------------------------------------------------------------

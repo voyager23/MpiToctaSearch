@@ -48,11 +48,12 @@ int main(int argc, char* argv[])
     
     if (rank != 0) {		
 		// Work Process
-		
+		MPI_Status status;		
 		int result_code = 0;
-		MPI_Status status;
 		int complex_count = 0;
+		int soln_count = 0;
 		gsl_vector_complex* compact = NULL;
+		gsl_vector_ulong* local_eqsums = NULL;
 		
 		result_code = MPI_Bcast(&complex_count, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 		if(result_code != MPI_SUCCESS) printf("\nWork process %d reports Bcast error.\n", rank);		
@@ -66,7 +67,7 @@ int main(int argc, char* argv[])
 		
 		// Reformat the compact vector into the qualsums format 
 		// which is a gsl_vector_ulong of gsl_vector_complex.
-		gsl_vector_ulong* local_eqsums = gsl_vector_ulong_calloc(complex_count / 4);
+		local_eqsums = gsl_vector_ulong_calloc(complex_count / 4);
 		for(int i = 0; i < compact->size; i += 4) {
 			gsl_vector_complex* p_gvc = gsl_vector_complex_calloc(4);
 			double* dest = p_gvc->data;
@@ -77,6 +78,8 @@ int main(int argc, char* argv[])
 		gsl_vector_complex_free(compact);
 		// establish the range of indexes used for the 'a' pointer.
 		// first = rank-1; limit is local_eqsums->size; stride is world_size-1
+		
+		soln_count = mpi_subset_search(&local_eqsums, &target);
 		
 	} else {		
 		// Root Process
