@@ -7,9 +7,9 @@ CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl`
 
-OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o mpi_subset_search.o
+OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o
 
-HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h mpi_subset_search.h
+HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h
 
 OBJS = $(addprefix ../build/, $(OBJECTS) )
 HDRS = $(addprefix ../mpi_include/, $(HEADERS))
@@ -39,8 +39,8 @@ mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
 #-----------------------------------------------------------------------
 
 go :
-	mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19
-#   mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
+#	mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19
+	mpirun -host mike-XPS-Mint19:2 ../bin/mts -t 09,19
 	 
 #-----------------------------------------------------------------------
 

@@ -79,7 +79,52 @@ int main(int argc, char* argv[])
 		// establish the range of indexes used for the 'a' pointer.
 		// first = rank-1; limit is local_eqsums->size; stride is world_size-1
 		
-		soln_count = mpi_subset_search(&local_eqsums, &target);
+		// ===== Solution subset search goes here =====
+		const int nsums = (local_eqsums)->size;
+		gsl_matrix_complex* wspace = gsl_matrix_complex_alloc(4,4);
+		gsl_vector_complex* zero = gsl_vector_complex_calloc(4);
+		int solutions = 0;
+		
+		printf("Search of equalsums - %lu lines\n", (local_eqsums)->size);
+		int triples = 0;		
+		for(int a = 0; a < nsums; ++a) {
+			for(int b = 0; b < nsums; ++b) {
+				if(b == a) continue;			
+				gsl_matrix_complex_set_row(wspace, 0, (p_gvc)gsl_vector_ulong_get(local_eqsums, a));
+				gsl_matrix_complex_set_row(wspace, 1, (p_gvc)gsl_vector_ulong_get(local_eqsums, b));
+
+				if( COMPLEX_EQUAL(gsl_matrix_complex_get(wspace,0,2),
+								  gsl_matrix_complex_get(wspace,1,0)) != 1) continue;
+				if(count_pairs_by_row(&wspace,2) != 1) continue;
+				// third index
+				for(int c = 0; c < nsums; ++c) {
+					if((c == a)||(c == b)) continue;
+					gsl_matrix_complex_set_row(wspace, 2, (p_gvc)gsl_vector_ulong_get(local_eqsums, c));
+					if( COMPLEX_EQUAL(gsl_matrix_complex_get(wspace,1,2),
+									  gsl_matrix_complex_get(wspace,2,0)) != 1) continue;
+					if(count_pairs_by_row(&wspace,3) != 2) continue;
+					++triples; // This triple is a candidate
+					if(solution_test(&wspace, &local_eqsums, &target) == 1) {
+					 solutions += 1;
+					 if(solutions % 100 == 0) {
+						 printf("\t%d ", solutions);
+						 if(solutions % 1000 == 0) printf("\n");
+						 fflush(stdout);
+					 }
+					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
+					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
+					}
+				} // for c...
+			} // for b...
+		} // for a...
+		
+		gsl_matrix_complex_free(wspace);
+		gsl_vector_complex_free(zero);	
+		
+		printf("Process %d found %d triples and %d solutions.\n", rank, triples, solutions);
+			
+		// --------------------------------
+		
 		
 	} else {		
 		// Root Process
@@ -111,3 +156,58 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+//----------------------------------------------------------------------
+int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target) {
+	
+	/*
+	 * Calculate a set of values for row3.
+	 * if row3 found in equalsums
+	 * 		update wspace and check for exactly 4 pairs of values
+	 * 		if 4 pairs found return 1 else return 0
+	 * else
+	 * 		clear row3 in wspace
+	 * 		return 0
+	 * endif
+	 */
+	
+	gsl_complex zero = gsl_complex_rect(0.0,0.0);
+	gsl_vector_complex* row3 = gsl_vector_complex_alloc(4);
+	
+	gsl_vector_complex_set(row3, 0, gsl_matrix_complex_get(*wspace,2,2));	// set d
+	gsl_vector_complex_set(row3, 2, gsl_matrix_complex_get(*wspace,0,0));	// set a
+	
+	// calc and set value y = target - (f + h + j)
+	gsl_complex y = *target;
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 0, 1));
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 1, 1));
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 2, 1));
+	gsl_vector_complex_set(row3, 1, y);	// set y
+	
+	// calc and set value x = target - (e + g + i)
+	gsl_complex x = *target;
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 0, 3));
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 1, 3));
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 2, 3));
+	gsl_vector_complex_set(row3, 3, x);	// set x
+	
+	// search equalsums for the corresponding row
+	
+	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
+	
+	if((found != NULL)) {
+		gsl_matrix_complex_set_row(*wspace, 3, row3);
+		gsl_vector_complex_free(row3);
+		if(count_pairs_by_row(wspace,4) == 4) {
+			return 1;
+		}else{
+			return 0;
+		}
+		
+	} else {
+		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
+		gsl_vector_complex_free(row3);
+		return 0;
+	}
+}
+

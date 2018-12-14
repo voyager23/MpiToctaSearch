@@ -37,6 +37,9 @@
 	#include "../mpi_include/toolbox.h"	
 	#include "../mpi_include/get_options.h"
 	#include "../mpi_include/compact_equalsums.h"
-	#include "../mpi_include/mpi_subset_search.h"
+	// #include "../mpi_include/mpi_subset_search.h"
+	
+int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
+
 	
 #endif
