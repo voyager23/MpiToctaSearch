@@ -94,7 +94,8 @@ int main(int argc, char* argv[])
 		
 		printf("Search of equalsums - %lu lines\n", (local_eqsums)->size);
 		int triples = 0;		
-		for(int a = 0; a < nsums; ++a) {
+		//for(int a = 0; a < nsums; ++a) {
+		for(int a = (rank-1); a < nsums; a+=(size-1)) {
 			for(int b = 0; b < nsums; ++b) {
 				if(b == a) continue;			
 				gsl_matrix_complex_set_row(wspace, 0, (p_gvc)gsl_vector_ulong_get(local_eqsums, a));
@@ -121,17 +122,10 @@ int main(int argc, char* argv[])
 					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
 					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
 					}
-					
-					// DEBUG BRANCH
-					// if(triples > 255) goto DEBUG;
-					// END DEBUG
-					
 				} // for c...
 			} // for b...
 		} // for a...
 		
-//		DEBUG:	printf("DEBUG:\n");
-
 		gsl_matrix_complex_free(wspace);
 		gsl_vector_complex_free(zero);	
 		
@@ -209,12 +203,6 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 	
 	// search equalsums for the corresponding row
 	
-	// DEBUG OVER-RIDE ROW3 with known value from local_eqsums.
-	// gsl_vector_complex_memcpy(row3, (p_gvc)gsl_vector_ulong_get(*equalsums,0));
-
-	// DEBUG PRINT ROW3
-	// for(int c = 0; c < 4; ++c) PRT_COMPLEX(gsl_vector_complex_get(row3,c)); NL;
-	
 	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
 	
 	if((found != NULL)) {
@@ -228,9 +216,6 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 		}
 		
 	} else {
-		// DEBUG PRINT TARGET
-		// PRT_COMPLEX(*target); NL;
-	
 		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
 		gsl_vector_complex_free(row3);
 		return 0;
