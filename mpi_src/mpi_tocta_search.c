@@ -29,11 +29,13 @@ int main(int argc, char* argv[])
 {
 	#define TAG_NDOUBLES 2
 	#define TAG_DDATA 4
+	#define TAG_NSOLNS 8
 	#define ROOT 0
 	
     int rank, size, len;
     char version[MPI_MAX_LIBRARY_VERSION_STRING];
     char pname[MPI_MAX_PROCESSOR_NAME];
+    MPI_Status status;
     
     gsl_complex target;
     int quiet = 0;
@@ -46,9 +48,7 @@ int main(int argc, char* argv[])
     MPI_Get_library_version(version, &len);
     MPI_Get_processor_name(pname, &len);
     
-    if (rank != 0) {		
-		// Work Process
-		MPI_Status status;		
+    if (rank != 0) { // Work Process
 		int result_code = 0;
 		int complex_count = 0;
 		int soln_count = 0;
@@ -130,12 +130,10 @@ int main(int argc, char* argv[])
 		gsl_vector_complex_free(zero);	
 		
 		printf("Process %d found %d triples and %d solutions.\n", rank, triples, solutions);
-			
-		// --------------------------------
 		
-		
-	} else {		
-		// Root Process
+		MPI_Send(&solutions, 1, MPI_INT, ROOT, TAG_NSOLNS, MPI_COMM_WORLD);
+				
+	} else { // Root Process
 		
 		int result_code;
 		gsl_vector_complex *compact = NULL;
@@ -158,13 +156,28 @@ int main(int argc, char* argv[])
 		MPI_Bcast(&target, 1, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		// Create a checksum
 		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
-		printf("Root Checksum: %0X\n", chksum);
+		printf("Root Checksum: %0X\n", chksum);		
+				
+		// Receive the partial solution counts
+		int *part_solns = malloc(sizeof(int) * (size -1));
+		for(int proc = 1; proc < size; ++proc) {
+			MPI_Recv(part_solns + proc - 1, 1, MPI_INT, proc, TAG_NSOLNS, MPI_COMM_WORLD, &status);
+		}
+			
+		int final_count = 0;
+		for(int proc = 1; proc < size; ++proc) final_count += part_solns[proc - 1];
+		
+		printf("Final solution count for ");
+		PRT_COMPLEX(target);
+		printf(": %d\n", final_count);
+		
+		// Cleanup code
+		free(part_solns);
 						
-	}
+	} // end root
 	
-    MPI_Finalize();
+	MPI_Finalize();
 
-    return 0;
 }
 
 //----------------------------------------------------------------------
