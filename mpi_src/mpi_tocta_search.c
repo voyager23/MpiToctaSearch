@@ -54,16 +54,22 @@ int main(int argc, char* argv[])
 		int soln_count = 0;
 		gsl_vector_complex* compact = NULL;
 		gsl_vector_ulong* local_eqsums = NULL;
+		gsl_complex local_target;
 		
+		// Receive the number of complex numbers
 		result_code = MPI_Bcast(&complex_count, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 		if(result_code != MPI_SUCCESS) printf("\nWork process %d reports Bcast error.\n", rank);		
 		printf("Process %d received %d as complex_count.\n", rank, complex_count); fflush(stdout);
+		// Receive the complex numbers
 		compact = gsl_vector_complex_calloc(complex_count);
-		MPI_Bcast(compact->data, complex_count, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		result_code = MPI_Bcast(compact->data, complex_count, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		// Receive the local_target value
+		result_code = MPI_Bcast(&local_target, 1, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		
 		// Create a checksum
 		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
 		printf("BCast received @ (%d) - Checksum %0X\n", rank, chksum);
+		printf("local_target: "); PRT_COMPLEX(local_target); NL;
 		
 		// Reformat the compact vector into the qualsums format 
 		// which is a gsl_vector_ulong of gsl_vector_complex.
@@ -76,6 +82,7 @@ int main(int argc, char* argv[])
 			gsl_vector_ulong_set(local_eqsums, (i/4), (ulong)p_gvc);
 		}
 		gsl_vector_complex_free(compact);
+		
 		// establish the range of indexes used for the 'a' pointer.
 		// first = rank-1; limit is local_eqsums->size; stride is world_size-1
 		
@@ -104,7 +111,7 @@ int main(int argc, char* argv[])
 									  gsl_matrix_complex_get(wspace,2,0)) != 1) continue;
 					if(count_pairs_by_row(&wspace,3) != 2) continue;
 					++triples; // This triple is a candidate
-					if(solution_test(&wspace, &local_eqsums, &target) == 1) {
+					if(solution_test(&wspace, &local_eqsums, &local_target) == 1) {
 					 solutions += 1;
 					 if(solutions % 100 == 0) {
 						 printf("\t%d ", solutions);
@@ -114,10 +121,17 @@ int main(int argc, char* argv[])
 					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
 					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
 					}
+					
+					// DEBUG BRANCH
+					// if(triples > 255) goto DEBUG;
+					// END DEBUG
+					
 				} // for c...
 			} // for b...
 		} // for a...
 		
+//		DEBUG:	printf("DEBUG:\n");
+
 		gsl_matrix_complex_free(wspace);
 		gsl_vector_complex_free(zero);	
 		
@@ -146,6 +160,8 @@ int main(int argc, char* argv[])
 		// Broadcast the doubles
 		MPI_Bcast(compact->data, compact->size, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		printf("Bcast completed.\n");
+		// Broadcast the target value
+		MPI_Bcast(&target, 1, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		// Create a checksum
 		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
 		printf("Root Checksum: %0X\n", chksum);
@@ -193,9 +209,16 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 	
 	// search equalsums for the corresponding row
 	
+	// DEBUG OVER-RIDE ROW3 with known value from local_eqsums.
+	// gsl_vector_complex_memcpy(row3, (p_gvc)gsl_vector_ulong_get(*equalsums,0));
+
+	// DEBUG PRINT ROW3
+	// for(int c = 0; c < 4; ++c) PRT_COMPLEX(gsl_vector_complex_get(row3,c)); NL;
+	
 	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
 	
 	if((found != NULL)) {
+		// printf("DEBUG: bsearch found match\n");
 		gsl_matrix_complex_set_row(*wspace, 3, row3);
 		gsl_vector_complex_free(row3);
 		if(count_pairs_by_row(wspace,4) == 4) {
@@ -205,6 +228,9 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 		}
 		
 	} else {
+		// DEBUG PRINT TARGET
+		// PRT_COMPLEX(*target); NL;
+	
 		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
 		gsl_vector_complex_free(row3);
 		return 0;
