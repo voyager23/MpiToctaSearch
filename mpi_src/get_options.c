@@ -52,8 +52,8 @@ int get_options(int argc, char **argv, gsl_complex *p_target, int *quiet, int *l
 		abort ();
 	}	
 
-	if(*quiet == 1) printf("Quiet flag (q) not implemented.\n");
-	if(*list == 1) printf("List-target flag (l) not implemented.\n\n");
+	//if(*quiet == 1) printf("Quiet flag (q) set.\n");
+	//if(*list == 1) printf("List-target flag (l) not implemented.\n\n");
 	sf = sscanf(t_value, "%d,%d", &r, &i);
 	if(sf != 2) {
 		printf("Could not parse the requested target.\n");

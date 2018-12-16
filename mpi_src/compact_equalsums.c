@@ -88,12 +88,12 @@ void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *t
 	} // Pass 2
 	
 	gsl_set_error_handler(old_handler);	// Restore error handler
-	printf("Match_count: %d\n", match_count);
+	//printf("Match_count: %d\n", match_count);
 	
 	// ---------- Sort equalsums----------  //
-	printf("Sorting local_eqsums...%d items ", match_count*24);
+	//printf("Sorting local_eqsums...%d items ", match_count*24);
 	qsort(local_eqsums->data, match_count*24, sizeof(uintptr_t), cmp_gsv);
-	printf("complete.\n");
+	//printf("complete.\n");
 	
 	// Write the contiguous version of equalsums for use by MPI Broadcast
 	*compact = gsl_vector_complex_calloc(match_count*24*4);
@@ -115,7 +115,7 @@ void compact_equalsums(char *fname, gsl_vector_complex **compact, gsl_complex *t
 		}
 #endif
 
-		printf("Compact->size: %ld\n", (*compact)->size);
+		//printf("Compact->size: %ld\n", (*compact)->size);
 
 
 	// ---------------Cleanup code as required--------------- //
