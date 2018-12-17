@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 		for(int proc = 1; proc < size; ++proc) final_count += part_solns[proc - 1];
 		
 		printf("Final solution count for ");
-		//PRT_COMPLEX(target);
+		PRT_COMPLEX(target);
 		printf(": %d\n", final_count);
 		
 		// Cleanup code
