@@ -83,8 +83,6 @@ int main( int argc, char *argv[] )
 			while (fgets(path, sizeof(path)-1, fp) != NULL) {
 			printf("%s", path);
 			// Format and write this result to the fresult file
-			// "Total: (%2d,%2d) Solutions: %d"
-			// Final solution count for ( 6,40) : 144
 			sscanf(path, "Final solution count for (%d,%d) : %d", &real, &imag, &nsolns);
 			int written = fprintf(fresult, "Total: (%d,%d) Solutions: %d\n", real, imag, nsolns);
 			}
