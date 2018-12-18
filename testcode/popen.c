@@ -1,5 +1,5 @@
 /*
- * system.c
+ * popen.c
  * 
  * Copyright 2018 mike <mike@mike-XPS-Mint19>
  * 
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 int main( int argc, char *argv[] )
 {
 
@@ -33,12 +34,12 @@ int main( int argc, char *argv[] )
 	char target_buffer[256];
 	char solns_buffer[256];
 	int match = 0;
-	int found,real,imag, nsolns;
+	int found,real, imag, nsolns;
 	char search_str[256];
 	char command[256];
 		
 	/* Open the targets file for reading */
-	ftarg = fopen("./targets.txt", "r");
+	ftarg = fopen("./short_targets.txt", "r");
 	if(ftarg == NULL) {
 	  printf("Error: Targets file not found.\n");
 	  exit(1);
@@ -69,8 +70,8 @@ int main( int argc, char *argv[] )
 		}
 		if(match == 0) {
 			// launch a search
-			sprintf(command, "mpirun -host mike-XPS-Mint19:8 ../bin/mts -q -t %02d,%02d", real, imag);
-			printf("Command line - %s\n", command);
+			sprintf(command, "mpirun -hostfile Hosts ../bin/mts -q -t %02d,%02d", real, imag);
+			// printf("Command line - %s\n", command);
 			
 			FILE *fp;
 			/* Open the command for reading. */
@@ -81,9 +82,11 @@ int main( int argc, char *argv[] )
 			}
 			/* Read the output a line at a time - output it. */
 			while (fgets(path, sizeof(path)-1, fp) != NULL) {
-			printf("%s", path);
+			//printf("Path = <%s>", path);
+			
 			// Format and write this result to the fresult file
 			sscanf(path, "Final solution count for (%d,%d) : %d", &real, &imag, &nsolns);
+			printf("real: %d	imag: %d	nsolns: %d\n", real, imag, nsolns);
 			int written = fprintf(fresult, "Total: (%d,%d) Solutions: %d\n", real, imag, nsolns);
 			}
 			/* close */

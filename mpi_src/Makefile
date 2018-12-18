@@ -39,8 +39,8 @@ mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
 #-----------------------------------------------------------------------
 
 go :
-	@#mpirun -host jupiter:8 ../bin/mts -t 09,19
-	mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
+	mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
+	@#mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
 	@#mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
 	 
 #-----------------------------------------------------------------------

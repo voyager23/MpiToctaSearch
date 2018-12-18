@@ -1,0 +1,6 @@
+#Hosts File for testcode/wrap
+jupiter slots=6
+C6100-2 slots=8
+C6100-3 slots=8
+C6100-4 slots=8
+
