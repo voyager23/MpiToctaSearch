@@ -126,8 +126,12 @@ int main(int argc, char* argv[])
 					}
 				} // for c...
 			} // for b...
+			// if rank==1 output a progress report - a/nsums as %
+			if(rank == 1) {
+				double progress = ((double)a/(double)nsums) * 100.0;
+				printf("\rRank 1: Progress %2.0f          ", progress); fflush(stdout);
+			}
 		} // for a...
-		
 		gsl_matrix_complex_free(wspace);
 		gsl_vector_complex_free(zero);	
 		
@@ -172,8 +176,8 @@ int main(int argc, char* argv[])
 		int final_count = 0;
 		for(int proc = 1; proc < size; ++proc) final_count += part_solns[proc - 1];
 		
-		printf("Final solution count for ");
-		//PRT_COMPLEX(target);
+		printf("\nFinal solution count for ");
+		PRT_COMPLEX(target);
 		printf(": %d\n", final_count);
 		
 		// Cleanup code
