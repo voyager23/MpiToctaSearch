@@ -2,7 +2,7 @@
 
 .PHONY : clean all go
 
-CFLAGS = -std=c11 -ggdb
+CFLAGS = -std=c11 -O2
 CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl`
@@ -32,7 +32,8 @@ toolbox.o : toolbox.c  $(HDRS)
 	
 compact_equalsums.o : compact_equalsums.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
-	
+
+# Incorporated into main routine	
 mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 	

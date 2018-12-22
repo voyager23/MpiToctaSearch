@@ -1,4 +1,3 @@
-
 Total: (5,20) Solutions: 0
 Total: (5,22) Solutions: 0
 Total: (5,23) Solutions: 0
@@ -492,3 +491,7 @@ Total: (16,44) Solutions: 3208320
 Total: (16,45) Solutions: 0
 Total: (16,46) Solutions: 2968128
 Total: (16,47) Solutions: 0
+Total: (16,48) Solutions: 4165584
+Total: (16,49) Solutions: 0
+Total: (16,50) Solutions: 2391840
+Total: (16,52) Solutions: 2664576

@@ -2,4 +2,4 @@
 
 
 wrap : popen.c
-	gcc popen.c -o ./wrap
+	gcc -O2 popen.c -o ./wrap

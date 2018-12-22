@@ -92,7 +92,7 @@ int main( int argc, char *argv[] )
 			/* close */
 			pclose(fp);
 		} else {
-			printf("Total exists in soln_count.\n");
+			printf("Total: (%d,%d) exists in soln_count.\n", real, imag);
 		}
 	}
 close:	fclose(ftarg);
