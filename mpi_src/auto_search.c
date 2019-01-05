@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "../include/auto_search.h"
 
@@ -39,6 +40,15 @@ int main( int argc, char *argv[] )
 	int found,real, imag, nsolns;
 	char search_str[256];
 	char command[256];
+	
+	time_t rawtime;
+	struct tm *timeinfo = NULL;
+	char buffer[128];
+	
+	/* set buffer to unique filename for results */
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer, 128, "../data/soln_count-%y%m%d-%H%M", timeinfo);
 		
 	/* Open the targets file for reading */
 	ftarg = fopen("../data/short_targets.txt", "r");
@@ -47,9 +57,9 @@ int main( int argc, char *argv[] )
 	  exit(1);
 	}
 	/* Open the results file for read/write */
-	fresult = fopen("../data/soln_count.txt", "a+");
+	fresult = fopen(buffer, "a+");
 	if(fresult == NULL) {
-	  printf("Error: Results file not found.\n");
+	  printf("Error: Results file %s not opened.\n",buffer);
 	  exit(1);
 	}
 
@@ -72,13 +82,14 @@ int main( int argc, char *argv[] )
 		}
 		
 		// DEBUG break
-		printf("Debug break\n");
-		break;
+		//printf("Debug break\n");
+		printf("Filename: %s\n", buffer);
+		//break;
 		// END DEBUG
 		
 		if(match == 0) {
 			// launch a search
-			sprintf(command, "mpirun -hostfile Hosts ../bin/mts -q -t %02d,%02d", real, imag);
+			sprintf(command, "mpirun -host jupiter:7 ../bin/mts -q -t %02d,%02d", real, imag);
 			// printf("Command line - %s\n", command);
 			
 			FILE *fp;
