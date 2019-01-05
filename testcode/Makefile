@@ -1,5 +1,5 @@
 #Makefile for Testcode Folder
 
 
-wrap : popen.c
-	gcc -O2 popen.c -o ./wrap
+wrap : auto_search.c
+	gcc -O2 auto_search.c -o ./auto_search
