@@ -32,10 +32,10 @@ toolbox.o : toolbox.c  $(HDRS)
 	
 compact_equalsums.o : compact_equalsums.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
+	
+wrap : auto_search.c
+	gcc -O2  auto_search.c -o ../bin/auto_search	
 
-# Incorporated into main routine	
-mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
-	mpicc -c $(CFLAGS) $< -o $(OUT)
 	
 #-----------------------------------------------------------------------
 
