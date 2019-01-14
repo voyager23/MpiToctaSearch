@@ -56,6 +56,10 @@ int main(int argc, char* argv[])
 		gsl_vector_ulong* local_eqsums = NULL;
 		gsl_complex local_target;
 		
+		GArray *soln_array = NULL;
+		soln_array = g_array_sized_new(FALSE, TRUE, sizeof(Soln), 1024);
+		Soln new_soln;
+		
 		// Receive the number of complex numbers
 		result_code = MPI_Bcast(&complex_count, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 		if(result_code != MPI_SUCCESS) printf("\nWork process %d reports Bcast error.\n", rank);
@@ -98,8 +102,10 @@ int main(int argc, char* argv[])
 		int triples = 0;		
 		//for(int a = 0; a < nsums; ++a) {
 		for(int a = (rank-1); a < nsums; a+=(size-1)) {
+			new_soln[0] = a;
 			for(int b = 0; b < nsums; ++b) {
-				if(b == a) continue;			
+				if(b == a) continue;
+				new_soln[1] = b;			
 				gsl_matrix_complex_set_row(wspace, 0, (p_gvc)gsl_vector_ulong_get(local_eqsums, a));
 				gsl_matrix_complex_set_row(wspace, 1, (p_gvc)gsl_vector_ulong_get(local_eqsums, b));
 
@@ -109,6 +115,7 @@ int main(int argc, char* argv[])
 				// third index
 				for(int c = 0; c < nsums; ++c) {
 					if((c == a)||(c == b)) continue;
+					new_soln[2] = c;
 					gsl_matrix_complex_set_row(wspace, 2, (p_gvc)gsl_vector_ulong_get(local_eqsums, c));
 					if( COMPLEX_EQUAL(gsl_matrix_complex_get(wspace,1,2),
 									  gsl_matrix_complex_get(wspace,2,0)) != 1) continue;
@@ -123,6 +130,9 @@ int main(int argc, char* argv[])
 					 }
 					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
 					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
+					 // Add solution to g_array
+					 new_soln[3] = 0;
+					 g_array_append_val(soln_array, new_soln);
 					}
 				} // for c...
 			} // for b...
@@ -136,12 +146,16 @@ int main(int argc, char* argv[])
 #endif			
 
 		} // for a...
+		
 		gsl_matrix_complex_free(wspace);
 		gsl_vector_complex_free(zero);	
 		
 		if(quiet==0) printf("Process %d found %d triples and %d solutions.\n", rank, triples, solutions);
+		if(quiet==0) printf("soln_array has %d items.\n", soln_array->len);
 		
 		MPI_Send(&solutions, 1, MPI_INT, ROOT, TAG_NSOLNS, MPI_COMM_WORLD);
+		
+		g_array_free(soln_array,TRUE);
 				
 	} else { //================ Root Process ===============//
 		

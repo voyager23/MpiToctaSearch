@@ -33,16 +33,16 @@ toolbox.o : toolbox.c  $(HDRS)
 compact_equalsums.o : compact_equalsums.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 
-# Incorporated into main routine	
-mpi_subset_search.o : mpi_subset_search.c  $(HDRS)
-	mpicc -c $(CFLAGS) $< -o $(OUT)
-	
 #-----------------------------------------------------------------------
 
 go :
-	mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
-	@#mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
-	@#mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
+	#@mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
+	#@mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
+	
+	# Target 09,23 expect 1536 solutions
+	# Target 09,19 expect 48 solutions
+	# Target 06,50 expect 96 solutions
+	mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,23
 	 
 #-----------------------------------------------------------------------
 

@@ -38,6 +38,8 @@
 	#include "../mpi_include/get_options.h"
 	#include "../mpi_include/compact_equalsums.h"
 	
+	typedef int Soln[4];
+	
 int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
 
 	
