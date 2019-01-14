@@ -36,13 +36,17 @@ compact_equalsums.o : compact_equalsums.c  $(HDRS)
 wrap : auto_search.c
 	gcc -O2  auto_search.c -o ../bin/auto_search	
 
-	
+
 #-----------------------------------------------------------------------
 
 go :
-	mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
-	@#mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
-	@#mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,19
+	#@mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
+	#@mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
+	
+	# Target 09,23 expect 1536 solutions
+	# Target 09,19 expect 48 solutions
+	# Target 06,50 expect 96 solutions
+	mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,23
 	 
 #-----------------------------------------------------------------------
 
