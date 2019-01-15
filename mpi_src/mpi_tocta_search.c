@@ -21,7 +21,7 @@
  * 
  */
 
-#include "mpi.h"
+#include <mpi.h>
 #include "../mpi_include/mpi_tocta_search.h"
 #include "../libcrc/include/checksum.h"
 
@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 	#define TAG_NDOUBLES 2
 	#define TAG_DDATA 4
 	#define TAG_NSOLNS 8
+	#define TAG_SOLUTIONS 16
 	#define ROOT 0
 	
     int rank, size, len;
@@ -48,6 +49,10 @@ int main(int argc, char* argv[])
     MPI_Get_library_version(version, &len);
     MPI_Get_processor_name(pname, &len);
     
+    MPI_Datatype MPI_SOLN;
+    MPI_Type_contiguous(4, MPI_INT, &MPI_SOLN);
+    MPI_Type_commit(&MPI_SOLN);
+        
     if (rank != 0) { // =============== Work Process =============== //
 		int result_code = 0;
 		int complex_count = 0;
@@ -67,18 +72,23 @@ int main(int argc, char* argv[])
 		// Receive the complex numbers
 		compact = gsl_vector_complex_calloc(complex_count);
 		result_code = MPI_Bcast(compact->data, complex_count, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		
 		// Receive the local_target value
 		result_code = MPI_Bcast(&local_target, 1, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		
 		// Receive the quiet flag
 		result_code = MPI_Bcast(&quiet, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 		if(quiet==0)		
 			printf("Process %d received %d as complex_count.\n", rank, complex_count); fflush(stdout);		
+		
 		// Create a checksum
 		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
 		if(quiet==0) printf("BCast received @ (%d) - Checksum %0X\n", rank, chksum);
 		if(quiet==0) printf("local_target: "); //PRT_COMPLEX(local_target); NL;
-		// Reformat the compact vector into the qualsums format 
+		
+		// Reformat the compact vector into the equalsums format 
 		// which is a gsl_vector_ulong of gsl_vector_complex.
+		
 		local_eqsums = gsl_vector_ulong_calloc(complex_count / 4);
 		for(int i = 0; i < compact->size; i += 4) {
 			gsl_vector_complex* p_gvc = gsl_vector_complex_calloc(4);
@@ -121,31 +131,40 @@ int main(int argc, char* argv[])
 									  gsl_matrix_complex_get(wspace,2,0)) != 1) continue;
 					if(count_pairs_by_row(&wspace,3) != 2) continue;
 					++triples; // This triple is a candidate
-					if(solution_test(&wspace, &local_eqsums, &local_target) == 1) {
-					 solutions += 1;
-					 if((quiet==0)&&(solutions % 100 == 0)) {
+					// Reuse the result_code variable
+					result_code = solution_test(&wspace, &local_eqsums, &local_target);
+					if(result_code >= 0 ) { // result_code has index
+						solutions += 1;
+						if((quiet==0)&&(solutions % 100 == 0)) {
 						 printf("\t%d ", solutions);
 						 if(solutions % 1000 == 0) printf("\n");
 						 fflush(stdout);
-					 }
-					 gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
-					 gsl_matrix_complex_memcpy(wspace_copy, wspace);
-					 // Add solution to g_array
-					 new_soln[3] = 0;
-					 g_array_append_val(soln_array, new_soln);
+						}
+						gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
+						gsl_matrix_complex_memcpy(wspace_copy, wspace);
+						// Add solution to g_array
+						new_soln[3] = result_code;
+						g_array_append_val(soln_array, new_soln);
 					}
 				} // for c...
 			} // for b...
 
-#if(0)
-			// if rank==1 output a progress report - a/nsums as %
-			if(rank == 1) {
-				double progress = ((double)a/(double)nsums) * 100.0;
-				printf("\rRank 1: Progress %2.0f          ", progress); fflush(stdout);
-			}
-#endif			
-
 		} // for a...
+		
+		
+#if(1)
+			// if rank==1 output data about the soln_array
+			if(rank == 1) {
+				printf("\n=====Process %d soln_array=====\n", rank);
+				for(int i = 0; i < soln_array->len; ++i) {
+					Soln *temp = (Soln*)g_array_index(soln_array, Soln, i);
+					for(int j = 0; j < 4; ++j) printf("%d ", *(((int*)temp)+j) );
+					printf("\n");
+				}
+				printf("\n===============================\n");
+			}
+		
+#endif					
 		
 		gsl_matrix_complex_free(wspace);
 		gsl_vector_complex_free(zero);	
@@ -155,7 +174,12 @@ int main(int argc, char* argv[])
 		
 		MPI_Send(&solutions, 1, MPI_INT, ROOT, TAG_NSOLNS, MPI_COMM_WORLD);
 		
+		MPI_Send(soln_array->data, solutions, MPI_SOLN, ROOT, TAG_SOLUTIONS, MPI_COMM_WORLD);
+	
+		
 		g_array_free(soln_array,TRUE);
+		
+	// end work process
 				
 	} else { //================ Root Process ===============//
 		
@@ -166,18 +190,22 @@ int main(int argc, char* argv[])
 		get_options(argc, argv, &target, &quiet, &list);
 		//PRT_COMPLEX(target); NL;
 		fflush(stdout);
+		
 		// Prepare a contiguous vector of complex numbers (compact) using equalsums_database.bin
 		// Each group of 4 represents an equalsum of target value.
-		
 		compact_equalsums("../data/equalsums_database.bin", &compact, &target);			
+		
 		// Broadcast number of doubles in main message
 		if(MPI_SUCCESS != MPI_Bcast(&(compact->size), 1, MPI_INT, ROOT, MPI_COMM_WORLD)) 
 			printf("\nWork process %d reports Bcast error.\n", rank);
+		
 		// Broadcast the doubles
 		MPI_Bcast(compact->data, compact->size, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
 		if(quiet==0) printf("Bcast completed.\n");
+		
 		// Broadcast the target value
 		MPI_Bcast(&target, 1, MPI_C_DOUBLE_COMPLEX, ROOT, MPI_COMM_WORLD);
+		
 		// Broadcast the quiet flag
 		result_code = MPI_Bcast(&quiet, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 				
@@ -198,11 +226,29 @@ int main(int argc, char* argv[])
 		PRT_COMPLEX(target);
 		printf(": %d\n", final_count);
 		
+		// Allocate space for solutions then receive index groups from worker nodes.
+		
+		int *final_solutions = malloc(sizeof(int)*4*final_count);
+		int *next = final_solutions;
+		for(int proc = 1; proc < size; ++proc) {
+			MPI_Recv(next, part_solns[proc-1], MPI_SOLN, proc, TAG_SOLUTIONS, MPI_COMM_WORLD, &status);
+			next += (part_solns[proc-1]*4);
+		}
+		
+		printf("Indexes of all solutions.\n");
+		for(int i = 0; i < final_count; ++i) {
+			for(int j = 0; j < 4; ++j) printf("%d ", final_solutions[(4*i)+j]);
+			printf("\n");
+		}  
+		
+		
 		// Cleanup code
+		free(final_solutions);
 		free(part_solns);
 						
 	} // end root
-	
+
+    MPI_Type_free(&MPI_SOLN);
 	MPI_Finalize();
 
 }
@@ -219,6 +265,9 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 	 * 		clear row3 in wspace
 	 * 		return 0
 	 * endif
+	 * 
+	 * Modified to return index into equalsums if success
+	 * 	esle return -1 on fail;
 	 */
 	
 	gsl_complex zero = gsl_complex_rect(0.0,0.0);
@@ -246,18 +295,25 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
 	
 	if((found != NULL)) {
+
+		int i;	// index into equalsums		
+		// Using a non-NULL pointer attempt to recover the index into equalsums
+		for(i = 0; i < (*equalsums)->size; ++i) {
+			if(gsl_vector_ulong_ptr(*equalsums,i) == found) break;
+		}
+		
 		gsl_matrix_complex_set_row(*wspace, 3, row3);
 		gsl_vector_complex_free(row3);
 		if(count_pairs_by_row(wspace,4) == 4) {
-			return 1;
+			return i;
 		}else{
-			return 0;
+			return -1;
 		}
 		
 	} else {
 		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
 		gsl_vector_complex_free(row3);
-		return 0;
+		return -1;
 	}
 }
 

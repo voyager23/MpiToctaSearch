@@ -7,9 +7,9 @@ CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl`
 
-OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o
+OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o classify.o
 
-HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h
+HEADERS = mpi_tocta_search.h get_options.h toolbox.h compact_equalsums.h classify.h
 
 OBJS = $(addprefix ../build/, $(OBJECTS) )
 HDRS = $(addprefix ../mpi_include/, $(HEADERS))
@@ -18,23 +18,29 @@ OUT = ../build/$@
 
 #-----------------------------------------------------------------------
 
-mts : $(OBJECTS)
+mts : $(OBJS)
 	mpicc $(CFLAGS) $(OBJS) $(LIBS) -o ../bin/mts
 	
-mpi_tocta_search.o : mpi_tocta_search.c $(HDRS)
+../build/mpi_tocta_search.o : mpi_tocta_search.c $(HDRS)
 	mpicc -c $(CFLAGS)  $< -o $(OUT)
 	
-get_options.o: get_options.c $(HDRS)
+../build/get_options.o: get_options.c $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 	
-toolbox.o : toolbox.c  $(HDRS)
+../build/toolbox.o : toolbox.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
 	
-compact_equalsums.o : compact_equalsums.c  $(HDRS)
+../build/compact_equalsums.o : compact_equalsums.c  $(HDRS)
 	mpicc -c $(CFLAGS) $< -o $(OUT)
+	
+../build/classify.o : classify.c $(HDRS)
+	mpicc -c $(CFLAGS) $< -o $(OUT)	
+	
+#-----------------------------------------------------------------------	
 	
 wrap : auto_search.c
 	gcc -O2  auto_search.c -o ../bin/auto_search	
+
 
 
 #-----------------------------------------------------------------------
@@ -46,9 +52,8 @@ go :
 	# Target 09,23 expect 1536 solutions
 	# Target 09,19 expect 48 solutions
 	# Target 06,50 expect 96 solutions
-	mpirun -host mike-XPS-Mint19:8 ../bin/mts -t 09,23
-	 
-#-----------------------------------------------------------------------
+	mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
+
 
 
 
