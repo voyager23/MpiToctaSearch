@@ -40,7 +40,9 @@
 	
 	typedef int Soln[4];
 	
-int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
+	int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
 
+	int cmp_solns(const void *left, const void *right);
+	
 	
 #endif

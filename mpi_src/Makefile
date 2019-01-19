@@ -55,6 +55,7 @@ go :
 	#@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
 	# Localhost only
 	mpirun -np 4 ../bin/mts -t 09,23
+	#mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
 
 
 
