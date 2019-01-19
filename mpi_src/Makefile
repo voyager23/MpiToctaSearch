@@ -52,7 +52,9 @@ go :
 	# Target 09,23 expect 1536 solutions
 	# Target 09,19 expect 48 solutions
 	# Target 06,50 expect 96 solutions
-	mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23
+	#@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
+	# Localhost only
+	mpirun -np 4 ../bin/mts -t 09,23
 
 
 
