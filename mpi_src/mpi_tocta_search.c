@@ -1,5 +1,5 @@
 /*
- * mpi_tocta_search.c.c
+ * mpi_tocta_search.c
  * 
  * Copyright 2018 mike <mike@jupiter>
  * 
@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
  * 
- * 
+ * NOTE: WHEN WORKING WITH G_ARRAY, THE LEN PARAMETER INDICATES THE NUMBER OF ITEMS NOT BYTES
  */
 
 #include <mpi.h>
