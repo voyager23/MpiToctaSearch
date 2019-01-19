@@ -25,6 +25,35 @@
 #include "../mpi_include/mpi_tocta_search.h"
 #include "../libcrc/include/checksum.h"
 
+
+int cmp_solns(const void *left, const void *right) {
+	
+	/* qsort()-style comparison function 
+	 * 	returns less than zero for first arg is less than second arg, 
+	 * 	zero for equal, 
+	 * 	greater than zero if first arg is greater than second arg
+	 */
+
+	int *l = (int*)left;
+	int *r = (int*)right;
+	
+	if(*l < *r) return -1;
+	if(*l++ > *r++) return +1;
+
+	if(*l < *r) return -1;
+	if(*l++ > *r++) return +1;
+
+	if(*l < *r) return -1;
+	if(*l++ > *r++) return +1;
+	
+	if(*l < *r) return -1;
+	if(*l > *r) return +1;
+	
+	return 0;
+	
+}
+	
+
 int main(int argc, char* argv[])
 {
 	#define TAG_NDOUBLES 2
@@ -234,6 +263,8 @@ int main(int argc, char* argv[])
 			MPI_Recv(next, part_solns[proc-1], MPI_SOLN, proc, TAG_SOLUTIONS, MPI_COMM_WORLD, &status);
 			next += (part_solns[proc-1]*4);
 		}
+		
+		qsort(final_solutions, final_count, sizeof(Soln), cmp_solns);
 		
 		printf("Indexes of all solutions.\n");
 		for(int i = 0; i < final_count; ++i) {
