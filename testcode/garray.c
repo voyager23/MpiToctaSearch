@@ -31,6 +31,7 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 
 typedef int Soln[4];
 const int nsoln = 9;
@@ -75,15 +76,23 @@ int cmp_solns(const void *left, const void *right) {
 	
 }
 
-GArray* merge_soln_arrays(GArray *left, GArray *right);
-GArray* merge_soln_arrays(GArray *left, GArray *right) {
+GArray* merge_soln_arrays(GArray *left, GArray *right, int free);
+GArray* merge_soln_arrays(GArray *left, GArray *right, int free) {
 	// Merge left and right pre-sorted g_arrays of Soln.
 	// Return pointer to new merged array.
-	// Input arrays are -not- erased
+	// Input arrays may be erased
+	
+	// Sanity checks
+	if((left == NULL)&&(right != NULL)) return(right);
+	if((left != NULL)&&(right == NULL)) return(left);		
+	
+	unsigned nl = left->len;
+	unsigned nr = right->len;		
 	int l = 0;
 	int r = 0; // working indexes
-	GArray *merged = g_array_sized_new(FALSE, FALSE, sizeof(Soln), (left->len + right->len));
-	while( (l < left->len) && (r < right->len) ) {
+	
+	GArray *merged = g_array_sized_new(FALSE, FALSE, sizeof(Soln), (nl + nr));
+	while( (l < nl) && (r < nr) ) {
 		// get pointers to each solution
 		Soln *lptr = (Soln*)g_array_index(left, Soln, l);
 		Soln *rptr = (Soln*)g_array_index(right, Soln, r);
@@ -98,6 +107,11 @@ GArray* merge_soln_arrays(GArray *left, GArray *right) {
 	while(l < left->len)  g_array_append_val(merged, g_array_index(left, Soln, l++));
 	while(r < right->len) g_array_append_val(merged, g_array_index(right,Soln, r++));
 	
+	if(free == TRUE) {
+		g_array_free(left,TRUE);
+		g_array_free(right,TRUE);
+	}
+	
 	return(merged);
 }
 
@@ -106,46 +120,52 @@ GArray* merge_soln_arrays(GArray *left, GArray *right) {
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
-	
-	GArray *solutions = g_array_new(FALSE, FALSE, sizeof(Soln));
-	
+	GArray *temp = NULL;	// pointer save
+	GArray *merged = NULL;	// Final merged array
+		
 	// Create and append nsoln count of Soln
+	GArray *solutions = g_array_new(FALSE, FALSE, sizeof(Soln));
 	for(int i = 0; i < nsoln; ++i) {
 		Soln buffer;
 		for(int j = 0; j < 4; ++j) buffer[j] = rand()%100 + 1;
 		g_array_append_val(solutions,buffer);
 	}
+	qsort(solutions->data, nsoln, sizeof(Soln), cmp_solns);
+	merged = merge_soln_arrays(merged, solutions,TRUE);
 	
-	printf("\n");
-#if(0)	
-	printf("Using an int pointer for 1st line.\n");
-	int *ip = (int*)solutions->data;
-	for(int i = 0; i < nsoln*4; ++i) printf("%d ", *ip++);
-#endif	
 	// Create second shorter array
 	GArray *second = g_array_new(FALSE, FALSE, sizeof(Soln));
-	
-	// Create and append (nsoln-2) count of Soln to second array
 	for(int i = 0; i < nsoln-2; ++i) {
 		Soln buffer;
 		for(int j = 0; j < 4; ++j) buffer[j] = rand()%100 + 1;
 		g_array_append_val(second,buffer);
 	}
-	qsort(solutions->data, nsoln, sizeof(Soln), cmp_solns);
 	qsort(second->data, nsoln-2, sizeof(Soln), cmp_solns);
+	merged = merge_soln_arrays(merged, second, TRUE);
 	
-	printf("solutions->data: %p		solutions->len: %u\n", solutions->data, solutions->len);
-	prt_g_array(solutions);
+	printf("merged->data: %p		merged->len: %u\n", merged->data, merged->len);
+	prt_g_array(merged);
 	printf("\n");
+	
+	// ----------Create a further array of solutions----------
+	//           Merge into the 'merged' array
 
-	printf("second->data: %p		second->len: %u\n", second->data, second->len);
-	prt_g_array(second);
-	printf("\n");
+	// Create second shorter array
+	GArray *third = g_array_new(FALSE, FALSE, sizeof(Soln));
 	
-	GArray *merged = merge_soln_arrays(solutions,second);
-	g_array_free(solutions,TRUE);
-	g_array_free(second,TRUE);
+	// Create and append (nsoln-2) count of Soln to third array
+	for(int i = 0; i < nsoln-2; ++i) {
+		Soln buffer;
+		for(int j = 0; j < 4; ++j) buffer[j] = rand()%100 + 1;
+		g_array_append_val(third,buffer);
+	}
+	qsort(third->data, nsoln-2, sizeof(Soln), cmp_solns);
 	
+	merged = merge_soln_arrays(merged, third, TRUE);
+	//g_array_free(merged,TRUE);
+	//merged = temp;	
+	//g_array_free(third,TRUE);
+
 	printf("merged->data: %p		merged->len: %u\n", merged->data, merged->len);
 	prt_g_array(merged);
 	printf("\n");
