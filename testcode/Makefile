@@ -1,5 +1,8 @@
 #Makefile for Testcode Folder
 
+gcrypt2 : gcrypt2.c
+	gcc gcrypt2.c -lgcrypt `pkg-config --cflags --libs gsl glib-2.0` -o g2c
+	
 gcrypt : gcrypt.c
 	gcc gcrypt.c -lgcrypt -o gc
 
