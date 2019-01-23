@@ -1,5 +1,8 @@
 #Makefile for Testcode Folder
 
+gcrypt : gcrypt.c
+	gcc gcrypt.c -lgcrypt -o gc
+
 ga : garray.c
 	gcc $< -g `pkg-config --cflags --libs glib-2.0` -o ga
 

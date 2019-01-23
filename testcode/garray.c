@@ -31,14 +31,13 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <time.h>
-#include <stdbool.h>
 
 typedef int Soln[4];
 const int nsoln = 9;
 
 void prt_soln(Soln *p);
 void prt_soln(Soln *p) {
-	for(int j = 0; j < 4; ++j) printf("%d ", (*p)[j]);
+	for(int j = 0; j < 4; ++j) printf("%3d ", (*p)[j]);
 	printf("\n");
 }
 
@@ -82,9 +81,10 @@ GArray* merge_soln_arrays(GArray *left, GArray *right, int free) {
 	// Return pointer to new merged array.
 	// Input arrays may be erased
 	
-	// Sanity checks
+	// Sanity checks	
 	if((left == NULL)&&(right != NULL)) return(right);
 	if((left != NULL)&&(right == NULL)) return(left);		
+	if((left == NULL)&&(right == NULL)) return(NULL);		
 	
 	unsigned nl = left->len;
 	unsigned nr = right->len;		
