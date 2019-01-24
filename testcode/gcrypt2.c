@@ -30,6 +30,7 @@
 #include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_matrix.h>
 #include "../mpi_include/toolbox.h"
+#include <gcrypt.h>
 
 //----------------------------------------------------------------------
 double soln0[4][8] = {	{4,11, 1,6, 2,13, 2,3},
@@ -70,6 +71,29 @@ char* posn_independant_signature(gsl_matrix_complex *m) {
 //======================================================================
 int main(int argc, char **argv)
 {
+	
+#if(1)
+	/* Version check should be the very first call because it
+	 makes sure that important subsystems are initialized. */
+	if (!gcry_check_version (GCRYPT_VERSION))
+	{
+	  fputs ("libgcrypt version mismatch\n", stderr);
+	  exit (2);
+	}
+
+	/* Disable secure memory.  */
+	gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
+
+	/* ... If required, other initialization goes here.  */
+
+	/* Tell Libgcrypt that initialization has completed. */
+	gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+	
+	gcry_error_t e;
+	gcry_md_hd_t hd;
+	e = gcry_md_open(&hd, GCRY_MD_SHA1, 0);
+#endif
+	
 	gsl_matrix_complex *mat0 = gsl_matrix_complex_alloc(4,4);
 	gsl_matrix_complex *mat1 = gsl_matrix_complex_alloc(4,4);
 	
@@ -97,9 +121,10 @@ int main(int argc, char **argv)
 	
 	prt_gsl_matrix_complex(mat0);
 	prt_gsl_matrix_complex(mat1);
+	
+	//for(int i = 0; i < 20; ++i) printf("%x ", digest[i]&0x00ff);
 		
-	
-	
+	gcry_md_close (hd);	
 	return 0;
 }
 
