@@ -45,8 +45,8 @@ double soln1[4][8] = {	{2,5, 4,11, 1,10, 2,7},
 //----------------------------------------------------------------------			
 void prt_gsl_matrix_complex(gsl_matrix_complex *m);
 void prt_gsl_matrix_complex(gsl_matrix_complex *m) {
-	for(int row = 0; row < 4; ++row) {
-		for(int col = 0; col < 4; ++col) {
+	for(int row = 0; row < m->size1; ++row) {
+		for(int col = 0; col < m->size2; ++col) {
 			gsl_complex *p = gsl_matrix_complex_ptr(m, row, col);
 			printf("%2.0f,%2.0f ", GSL_REAL(*p), GSL_IMAG(*p));
 		}
@@ -55,24 +55,64 @@ void prt_gsl_matrix_complex(gsl_matrix_complex *m) {
 	printf("\n");
 }
 //----------------------------------------------------------------------
-char* posn_independant_signature(gsl_matrix_complex *m);
-char* posn_independant_signature(gsl_matrix_complex *m) {
-	/* return a pointer to a 20 byte sha128 digest
-	 * 	for each node:
-	 *		calc and save a 20 byte digest
-	 * 	sort array of digests
-	 * 	calc final sha128 for 6 digests
+char* posn_independant_signature(gsl_matrix_complex *m, int algo);
+char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
+	/* Expects pointers to a matrix_complex and the algorithm
+	 * to use (GCRY_MD_SHA1). Returns a pointer to a digest of the
+	 * correct length.
 	 */
+	gcry_error_t e;
+	gcry_md_hd_t hd;
+	e = gcry_md_open(&hd, algo, 0);	
 	
-	// allocate memory for a total of 7 digests
+	// allocate memory
+	char *digest = malloc(gcry_md_get_algo_dlen(algo));
+	// allocate workspace as a contiguous vector of gsl_complex_double
+	gsl_vector_complex *wspace = gsl_vector_complex_alloc(6*4);
+	
+	// copy rows and cols to wspace
+	gsl_vector_complex *buffer = gsl_vector_complex_alloc(4);
+	for(int i = 0; i < 4; ++i) 
+		memcpy(gsl_vector_complex_ptr(wspace, i*4), gsl_matrix_complex_ptr(m, i, 0), sizeof(gsl_complex)*4);
+	// get/set col3 - row 4
+	gsl_matrix_complex_get_col(buffer, m, 3);
+	// vector copy
+	for(int i = 0; i < 4; ++i) 
+		gsl_vector_complex_set(wspace, (16 + i), gsl_vector_complex_get(buffer, i));	
+	// get/set col 1 - row 5
+	gsl_matrix_complex_get_col(buffer, m, 1);
+	// vector copy
+	for(int i = 0; i < 4; ++i) 
+		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i)); 
 
+	// sort each row into ascending order
+	// for(int r = 0; r < 6; ++r) 		
+		// qsort(gsl_matrix_complex_ptr(wspace, r, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
 	
+	// resort 6 rows into ascending order
+	
+	// calc sha128 hash for matrix wspace
+	
+	// return pointer to 20 char digest
+
+	printf("Workspace\n");
+	for(int row = 0; row < 6; ++row) {
+		for(int col = 0; col < 4; ++col) {
+			gsl_complex *p = gsl_vector_complex_ptr(wspace, row*4 + col);
+			printf("%2.0f,%2.0f ", GSL_REAL(*p), GSL_IMAG(*p));
+		}
+		printf("\n");
+	}
+	printf("\n");
+	
+	// Cleanup code 
+	gcry_md_close (hd);	
+	return digest;
 }
 //======================================================================
 int main(int argc, char **argv)
 {
 	
-#if(1)
 	/* Version check should be the very first call because it
 	 makes sure that important subsystems are initialized. */
 	if (!gcry_check_version (GCRYPT_VERSION))
@@ -88,11 +128,6 @@ int main(int argc, char **argv)
 
 	/* Tell Libgcrypt that initialization has completed. */
 	gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
-	
-	gcry_error_t e;
-	gcry_md_hd_t hd;
-	e = gcry_md_open(&hd, GCRY_MD_SHA1, 0);
-#endif
 	
 	gsl_matrix_complex *mat0 = gsl_matrix_complex_alloc(4,4);
 	gsl_matrix_complex *mat1 = gsl_matrix_complex_alloc(4,4);
@@ -112,19 +147,19 @@ int main(int argc, char **argv)
 	}
 	
 	prt_gsl_matrix_complex(mat0);
-	prt_gsl_matrix_complex(mat1);
+	//prt_gsl_matrix_complex(mat1);
 	
-	qsort(gsl_matrix_complex_ptr(mat0, 0, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	qsort(gsl_matrix_complex_ptr(mat0, 1, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	qsort(gsl_matrix_complex_ptr(mat0, 2, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	qsort(gsl_matrix_complex_ptr(mat0, 3, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	
-	prt_gsl_matrix_complex(mat0);
-	prt_gsl_matrix_complex(mat1);
+	//qsort(gsl_matrix_complex_ptr(mat0, 0, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
+	//qsort(gsl_matrix_complex_ptr(mat0, 1, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
+	//qsort(gsl_matrix_complex_ptr(mat0, 2, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
+	//qsort(gsl_matrix_complex_ptr(mat0, 3, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
+	//prt_gsl_matrix_complex(mat0);
+		
+	char *digest = posn_independant_signature(mat0, GCRY_MD_SHA1);
 	
 	//for(int i = 0; i < 20; ++i) printf("%x ", digest[i]&0x00ff);
-		
-	gcry_md_close (hd);	
+	//printf("\n");
+	
 	return 0;
 }
 
