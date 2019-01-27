@@ -55,6 +55,18 @@ void prt_gsl_matrix_complex(gsl_matrix_complex *m) {
 	printf("\n");
 }
 //----------------------------------------------------------------------
+int cmp4complex(const void *left, const void *right);
+int cmp4complex(const void *left, const void *right) {
+	// cast the void pointers as gsl_complex *p
+	gsl_complex *pl = (gsl_complex*)left;
+	gsl_complex *pr = (gsl_complex*)right;
+	for(int i = 0; i < 4; ++i) {
+		int result = compare_gsl_complex(pl++, pr++);
+		if(result != 0) return result;
+	}
+	return 0;
+}
+//-----------------------------------------------------------------------
 char* posn_independant_signature(gsl_matrix_complex *m, int algo);
 char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 	/* Expects pointers to a matrix_complex and the algorithm
@@ -65,8 +77,7 @@ char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 	gcry_md_hd_t hd;
 	e = gcry_md_open(&hd, algo, 0);	
 	
-	// allocate memory
-	char *digest = malloc(gcry_md_get_algo_dlen(algo));
+	
 	// allocate workspace as a contiguous vector of gsl_complex_double
 	gsl_vector_complex *wspace = gsl_vector_complex_alloc(6*4);
 	
@@ -86,12 +97,15 @@ char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i)); 
 
 	// sort each row into ascending order
-	// for(int r = 0; r < 6; ++r) 		
-		// qsort(gsl_matrix_complex_ptr(wspace, r, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
+	for(int r = 0; r < 6; ++r) 		
+		qsort(gsl_vector_complex_ptr(wspace, (r*4)), 4, sizeof(gsl_complex), compare_gsl_complex);
 	
 	// resort 6 rows into ascending order
+	qsort(gsl_vector_complex_ptr(wspace,0), 6, (sizeof(gsl_complex) * 4), cmp4complex);
 	
 	// calc sha128 hash for matrix wspace
+	gcry_md_reset(hd);
+	gcry_md_write(hd, wspace, sizeof(gsl_complex)*24);
 	
 	// return pointer to 20 char digest
 
@@ -106,9 +120,10 @@ char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 	printf("\n");
 	
 	// Cleanup code 
-	gcry_md_close (hd);	
-	return digest;
+	// gcry_md_close (hd);	
+	return(gcry_md_read(hd,GCRY_MD_SHA1));
 }
+
 //======================================================================
 int main(int argc, char **argv)
 {
@@ -147,18 +162,22 @@ int main(int argc, char **argv)
 	}
 	
 	prt_gsl_matrix_complex(mat0);
-	//prt_gsl_matrix_complex(mat1);
-	
-	//qsort(gsl_matrix_complex_ptr(mat0, 0, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	//qsort(gsl_matrix_complex_ptr(mat0, 1, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	//qsort(gsl_matrix_complex_ptr(mat0, 2, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	//qsort(gsl_matrix_complex_ptr(mat0, 3, 0), 4, sizeof(gsl_complex), compare_gsl_complex);
-	//prt_gsl_matrix_complex(mat0);
+	prt_gsl_matrix_complex(mat1);
 		
 	char *digest = posn_independant_signature(mat0, GCRY_MD_SHA1);
 	
-	//for(int i = 0; i < 20; ++i) printf("%x ", digest[i]&0x00ff);
-	//printf("\n");
+	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
+	printf("\n");
+	
+	//free(digest);
+	
+		
+	digest = posn_independant_signature(mat1, GCRY_MD_SHA1);
+	
+	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
+	printf("\n");
+	
+	//free(digest);
 	
 	return 0;
 }
