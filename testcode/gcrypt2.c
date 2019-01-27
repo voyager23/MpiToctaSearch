@@ -30,7 +30,7 @@
 #include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_matrix.h>
 #include "../mpi_include/toolbox.h"
-#include <gcrypt.h>
+#include <openssl/sha.h>
 
 //----------------------------------------------------------------------
 double soln0[4][8] = {	{4,11, 1,6, 2,13, 2,3},
@@ -67,17 +67,9 @@ int cmp4complex(const void *left, const void *right) {
 	return 0;
 }
 //-----------------------------------------------------------------------
-char* posn_independant_signature(gsl_matrix_complex *m, int algo);
-char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
-	/* Expects pointers to a matrix_complex and the algorithm
-	 * to use (GCRY_MD_SHA1). Returns a pointer to a digest of the
-	 * correct length.
-	 */
-	gcry_error_t e;
-	gcry_md_hd_t hd;
-	e = gcry_md_open(&hd, algo, 0);	
-	
-	
+void posn_independant_signature(gsl_matrix_complex *m, char *digest);
+void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
+
 	// allocate workspace as a contiguous vector of gsl_complex_double
 	gsl_vector_complex *wspace = gsl_vector_complex_alloc(6*4);
 	
@@ -104,10 +96,11 @@ char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 	qsort(gsl_vector_complex_ptr(wspace,0), 6, (sizeof(gsl_complex) * 4), cmp4complex);
 	
 	// calc sha128 hash for matrix wspace
-	gcry_md_reset(hd);
-	gcry_md_write(hd, wspace, sizeof(gsl_complex)*24);
+	unsigned char result[SHA_DIGEST_LENGTH];
+	SHA1((const char *)wspace, sizeof(gsl_complex)*24, result);
 	
 	// return pointer to 20 char digest
+	strncpy(digest, (char*)wspace, 20);
 
 	printf("Workspace\n");
 	for(int row = 0; row < 6; ++row) {
@@ -119,31 +112,12 @@ char* posn_independant_signature(gsl_matrix_complex *m, int algo) {
 	}
 	printf("\n");
 	
-	// Cleanup code 
-	// gcry_md_close (hd);	
-	return(gcry_md_read(hd,GCRY_MD_SHA1));
 }
 
 //======================================================================
 int main(int argc, char **argv)
 {
-	
-	/* Version check should be the very first call because it
-	 makes sure that important subsystems are initialized. */
-	if (!gcry_check_version (GCRYPT_VERSION))
-	{
-	  fputs ("libgcrypt version mismatch\n", stderr);
-	  exit (2);
-	}
 
-	/* Disable secure memory.  */
-	gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
-
-	/* ... If required, other initialization goes here.  */
-
-	/* Tell Libgcrypt that initialization has completed. */
-	gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
-	
 	gsl_matrix_complex *mat0 = gsl_matrix_complex_alloc(4,4);
 	gsl_matrix_complex *mat1 = gsl_matrix_complex_alloc(4,4);
 	
@@ -164,20 +138,16 @@ int main(int argc, char **argv)
 	prt_gsl_matrix_complex(mat0);
 	prt_gsl_matrix_complex(mat1);
 		
-	char *digest = posn_independant_signature(mat0, GCRY_MD_SHA1);
+	char digest[20]; 
+	posn_independant_signature(mat0, digest);
 	
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
 	
-	//free(digest);
-	
-		
-	digest = posn_independant_signature(mat1, GCRY_MD_SHA1);
+	posn_independant_signature(mat1, digest);
 	
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
-	
-	//free(digest);
 	
 	return 0;
 }
