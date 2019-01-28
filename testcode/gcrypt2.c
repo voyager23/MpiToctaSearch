@@ -39,8 +39,9 @@ double soln0[4][8] = {	{4,11, 1,6, 2,13, 2,3},
 						{2,7, 1,10, 4,11, 2,5} };
 						
 double soln1[4][8] = {	{2,5, 4,11, 1,10, 2,7},
-						{1,10, 1,6, 3,8, 4,9},
-						{3,8, 2,13, 3,10, 1,2},
+						{1,10, 1,6, 3,8, 4,9},						
+						{3,8, 2,13, 3,10, 1,2}, 	// original data
+						//{3,8, 2,13, 3,10, 2,1},	// debug data
 						{3,10, 2,3, 2,5, 2,15} };
 //----------------------------------------------------------------------			
 void prt_gsl_matrix_complex(gsl_matrix_complex *m);
@@ -97,10 +98,10 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	
 	// calc sha128 hash for matrix wspace
 	unsigned char result[SHA_DIGEST_LENGTH];
-	SHA1((const char *)wspace, sizeof(gsl_complex)*24, result);
+	SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
 	
-	// return pointer to 20 char digest
-	strncpy(digest, (char*)wspace, 20);
+	// return 20 char digest
+	strncpy(digest, result, 20);
 
 	printf("Workspace\n");
 	for(int row = 0; row < 6; ++row) {
@@ -111,7 +112,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		printf("\n");
 	}
 	printf("\n");
-	
+	gsl_vector_complex_free(wspace);
 }
 
 //======================================================================
@@ -138,14 +139,15 @@ int main(int argc, char **argv)
 	prt_gsl_matrix_complex(mat0);
 	prt_gsl_matrix_complex(mat1);
 		
-	char digest[20]; 
+	char digest[20];
+	 
 	posn_independant_signature(mat0, digest);
-	
+	printf("Signature.\n");
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
 	
 	posn_independant_signature(mat1, digest);
-	
+	printf("Signature.\n");
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
 	
