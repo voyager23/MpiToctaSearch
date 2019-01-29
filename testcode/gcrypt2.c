@@ -172,28 +172,20 @@ int main(int argc, char **argv)
 	prt_gsl_matrix_complex(mat2);
 	prt_gsl_matrix_complex(mat3);
 		
-	char digest[20];
-	 
-	posn_independant_signature(mat0, digest);
-	printf("Signature: ");
-	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
-	printf("\n");
+	gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(4);
+
+	for(int j = 0; j < 4; ++j) {
+		gsl_vector_ulong_set(digest_ptrs, j, (ulong)(malloc(sizeof(char)*20)));
+		posn_independant_signature(mat0, (char*)gsl_vector_ulong_get(digest_ptrs, j));
+		printf("Matrix %d - Signature: ",j);
+		for(int i = 0; i < 20; ++i) printf("%02x ", (((char*)gsl_vector_ulong_get(digest_ptrs, j))[i])&0x00ff);
+		printf("\n");
+	}
 	
-	posn_independant_signature(mat1, digest);
-	printf("Signature: ");
-	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
-	printf("\n");
-	 
-	posn_independant_signature(mat2, digest);
-	printf("Signature: ");
-	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
-	printf("\n");
+	// Cleanup code
+	for(int i = 0; i < digest_ptrs->size; ++i) free((void*)gsl_vector_ulong_get(digest_ptrs,i));
+	gsl_vector_ulong_free(digest_ptrs);
 	
-	posn_independant_signature(mat3, digest);
-	printf("Signature: ");
-	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
-	printf("\n");
-	
-	return 0;
+	// return 0; Not required by main()
 }
 
