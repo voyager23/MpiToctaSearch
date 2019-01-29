@@ -115,7 +115,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	// return 20 char digest
 	strncpy(digest, result, 20);
 
-	printf("Workspace\n");
+	printf("\nWorkspace\n");
 	for(int row = 0; row < 6; ++row) {
 		for(int col = 0; col < 4; ++col) {
 			gsl_complex *p = gsl_vector_complex_ptr(wspace, row*4 + col);
@@ -123,7 +123,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		}
 		printf("\n");
 	}
-	printf("\n");
+	//printf("\n");
 	gsl_vector_complex_free(wspace);
 }
 
@@ -131,8 +131,27 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 int main(int argc, char **argv)
 {
 
-	gsl_matrix_complex *mat2 = gsl_matrix_complex_alloc(4,4);
+	gsl_matrix_complex *mat0 = gsl_matrix_complex_alloc(4,4);
 	gsl_matrix_complex *mat1 = gsl_matrix_complex_alloc(4,4);
+	gsl_matrix_complex *mat2 = gsl_matrix_complex_alloc(4,4);
+	gsl_matrix_complex *mat3 = gsl_matrix_complex_alloc(4,4);
+	
+	// setup N matrixes
+	
+	for(int row = 0; row < 4; ++row) {
+		for(int col = 0; col < 8; col+=2) {
+			gsl_complex t = gsl_complex_rect(soln0[row][col], soln0[row][col+1]);
+			gsl_matrix_complex_set(mat0, row, col/2, t);
+		}
+	}
+	
+	for(int row = 0; row < 4; ++row) {
+		for(int col = 0; col < 8; col+=2) {
+			gsl_complex t = gsl_complex_rect(soln1[row][col], soln1[row][col+1]);
+			gsl_matrix_complex_set(mat1, row, col/2, t);
+		}
+	}
+	
 	
 	for(int row = 0; row < 4; ++row) {
 		for(int col = 0; col < 8; col+=2) {
@@ -144,22 +163,34 @@ int main(int argc, char **argv)
 	for(int row = 0; row < 4; ++row) {
 		for(int col = 0; col < 8; col+=2) {
 			gsl_complex t = gsl_complex_rect(soln1[row][col], soln1[row][col+1]);
-			gsl_matrix_complex_set(mat1, row, col/2, t);
+			gsl_matrix_complex_set(mat3, row, col/2, t);
 		}
 	}
 	
-	prt_gsl_matrix_complex(mat2);
+	prt_gsl_matrix_complex(mat0);
 	prt_gsl_matrix_complex(mat1);
+	prt_gsl_matrix_complex(mat2);
+	prt_gsl_matrix_complex(mat3);
 		
 	char digest[20];
 	 
-	posn_independant_signature(mat2, digest);
-	printf("Signature.\n");
+	posn_independant_signature(mat0, digest);
+	printf("Signature: ");
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
 	
 	posn_independant_signature(mat1, digest);
-	printf("Signature.\n");
+	printf("Signature: ");
+	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
+	printf("\n");
+	 
+	posn_independant_signature(mat2, digest);
+	printf("Signature: ");
+	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
+	printf("\n");
+	
+	posn_independant_signature(mat3, digest);
+	printf("Signature: ");
 	for(int i = 0; i < 20; ++i) printf("%02x ", digest[i]&0x00ff);
 	printf("\n");
 	
