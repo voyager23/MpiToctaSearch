@@ -104,5 +104,3 @@ int count_pairs_by_row(gsl_matrix_complex** wspace, int nrows) {
 	}
 	return pair_count;
 }
-
-//======================================================================

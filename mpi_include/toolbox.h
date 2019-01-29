@@ -27,6 +27,7 @@
 	#define __TOOLBOX_H__
 	
 	#include <gsl/gsl_matrix.h>
+	#include <openssl/sha.h>
 	#include <string.h>
 	
 	typedef unsigned long 		ulong;
@@ -52,6 +53,8 @@
 	int compare_gsl_matrix_complex(const void* m1, const void* m2);
 	
 	int count_pairs_by_row(gsl_matrix_complex** wspace, int rows);
+
+
 
 #endif
 

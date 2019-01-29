@@ -2,10 +2,10 @@
 
 .PHONY : clean all go
 
-CFLAGS = -std=c11 -O2
-CFLAGS += `pkg-config --cflags glib-2.0 gsl`
+CFLAGS = -std=c11 -O2 -g
+CFLAGS += `pkg-config --cflags glib-2.0 gsl openssl`
 LIBS = ../libcrc/lib/libcrc.a
-LIBS +=  `pkg-config --libs glib-2.0 gsl`
+LIBS +=  `pkg-config --libs glib-2.0 gsl openssl`
 
 OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o classify.o
 
@@ -46,16 +46,18 @@ wrap : auto_search.c
 #-----------------------------------------------------------------------
 
 go :
-	#@mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
-	#@mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
-	
-	# Target 09,23 expect 1536 solutions
-	# Target 09,19 expect 48 solutions
-	# Target 06,50 expect 96 solutions
-	#@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
-	# Localhost only
-	mpirun -np 4 ../bin/mts -t 09,33
-	#mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
+#@mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
+#@mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
+
+#@Target 09,23 expect 1536 solutions
+#@Target 09,19 expect 48 solutions
+#@Target 06,50 expect 96 solutions
+#@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
+
+#@Localhost only
+	mpirun -np 4 ../bin/mts -t 06,50
+
+#@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
 
 
 

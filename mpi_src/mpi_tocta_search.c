@@ -270,15 +270,69 @@ int main(int argc, char* argv[])
 		for(int i = 0; i < final_count; ++i) {
 			for(int j = 0; j < 4; ++j) printf("%d ", final_solutions[(4*i)+j]);
 			printf("\n");
-		}  
+		}
+		
+		
+		printf("Final solution count for ");
+		PRT_COMPLEX(target);
+		printf(": %d\n", final_count);
+	
+		
+		/*
+		 * Code to classify solutions into groups[48]
+		 * Data: compact, final_solutions, final_count
+		 * 		gsl_vector_complex *compact
+		 * 		int final_count = 0;
+		 * 		int *final_solutions = malloc(sizeof(int)*4*final_count);
+		 * -------------------------------------------------------------------------
+		 * Allocate gsl_vector_ulong(final_count) {digest_ptrs}
+		 * 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
+		 * Allocate gsl_matrix-complex as workspace
+		 * 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
+		 * for each line of final_solutions
+		 * 		allocate memory for digest and save pointer in gsl_vector_ulong
+		 * 		get 4 indexes
+		 * 		update the workspace
+		 * 		call posn_independant_signature(workspace, *digest)	{see gcrypt2.c}
+		 * 
+		 * for each entry in digest_ptrs
+		 * 		print the signature
+		 * -------------------------------------------------------------------------
+		 */
+		 
+		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
+		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
+		
+		for(int i = 0; i < final_count; ++i) {
+			// Construct the workspace matrix
+			for(int row = 0; row < 4; ++row) {	// row index
+				int idx = final_solutions[(4*i)+row];
+				// idx references a group of 4 complex values in vector compact
+				// extract and save 4 complex values to workspace row j
+				for(int col = 0; col < 4; ++col) {
+					gsl_complex foo = gsl_vector_complex_get(compact, idx+col);
+					printf("i:%d   row:%d   idx:%d   col:%d   real:%2.0f   imag:%2.0f\n", i, row, idx, col, GSL_REAL(foo), GSL_IMAG(foo));	
+					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, idx+col));
+				}
+				
+				// Allocate digest
+				gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*20)));
+				// Calculate the signature
+				posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
+			}
+		}
+
+
+		 
 		
 		
 		// Cleanup code
 		free(final_solutions);
 		free(part_solns);
 						
-	} // end root
+	} // end root process
 
+	// Cleanup MPI
     MPI_Type_free(&MPI_SOLN);
 	MPI_Finalize();
 

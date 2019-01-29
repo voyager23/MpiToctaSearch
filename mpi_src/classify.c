@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/classify.h"
+#include "../mpi_include/classify.h"
 
 // Lists indexes into gsl_vector_complex elem_value for all rotations
 // This allows each transformation to be built
@@ -178,3 +178,62 @@ void classify_all_solutions(GList** AllSolutions, GList** SolutionLists) {
 	gsl_matrix_complex_free(wspace);
 	gsl_matrix_complex_free(eg_matrix);		
 }
+//==============================================================================
+void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
+
+	// allocate workspace as a contiguous vector of gsl_complex_double
+	gsl_vector_complex *wspace = gsl_vector_complex_alloc(6*4);
+	
+	// copy rows and cols to wspace
+	gsl_vector_complex *buffer = gsl_vector_complex_alloc(4);
+	for(int i = 0; i < 4; ++i) 
+		memcpy(gsl_vector_complex_ptr(wspace, i*4), gsl_matrix_complex_ptr(m, i, 0), sizeof(gsl_complex)*4);
+	// get/set col3 - row 4
+	gsl_matrix_complex_get_col(buffer, m, 3);
+	// vector copy
+	for(int i = 0; i < 4; ++i) 
+		gsl_vector_complex_set(wspace, (16 + i), gsl_vector_complex_get(buffer, i));	
+	// get/set col 1 - row 5
+	gsl_matrix_complex_get_col(buffer, m, 1);
+	// vector copy
+	for(int i = 0; i < 4; ++i) 
+		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i)); 
+
+	// sort each row into ascending order
+	for(int r = 0; r < 6; ++r) 		
+		qsort(gsl_vector_complex_ptr(wspace, (r*4)), 4, sizeof(gsl_complex), compare_gsl_complex);
+	
+	// resort 6 rows into ascending order
+	qsort(gsl_vector_complex_ptr(wspace,0), 6, (sizeof(gsl_complex) * 4), cmp4complex);
+	
+	// calc sha128 hash for matrix wspace
+	unsigned char result[SHA_DIGEST_LENGTH];
+	SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
+	
+	// return 20 char digest
+	strncpy(digest, result, 20);
+
+	printf("\nWorkspace\n");
+	for(int row = 0; row < 6; ++row) {
+		for(int col = 0; col < 4; ++col) {
+			gsl_complex *p = gsl_vector_complex_ptr(wspace, row*4 + col);
+			printf("%2.0f,%2.0f ", GSL_REAL(*p), GSL_IMAG(*p));
+		}
+		printf("\n");
+	}
+	//printf("\n");
+	gsl_vector_complex_free(wspace);
+}
+//======================================================================
+int cmp4complex(const void *left, const void *right) {
+	// cast the void pointers as gsl_complex *p
+	gsl_complex *pl = (gsl_complex*)left;
+	gsl_complex *pr = (gsl_complex*)right;
+	for(int i = 0; i < 4; ++i) {
+		int result = compare_gsl_complex(pl++, pr++);
+		if(result != 0) return result;
+	}
+	return 0;
+}
+//==============================================================================
+

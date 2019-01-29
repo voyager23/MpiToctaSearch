@@ -21,8 +21,17 @@
  * 
  */
 
-#include <stdio.h>
-#include <glib.h>
-#include "../include/toolbox.h"
 
-void classify_all_solutions(GList** AllSolutions, GList** SolutionLists);
+#ifndef __CLASSIFY_H__
+	#define __CLASSIFY_H__
+	
+	#include <stdio.h>
+	#include <glib.h>
+	#include <openssl/sha.h>
+	#include "../include/toolbox.h"
+
+	void classify_all_solutions(GList** AllSolutions, GList** SolutionLists);	
+	void posn_independant_signature(gsl_matrix_complex *m, char *digest);
+	int cmp4complex(const void *left, const void *right);
+
+#endif
