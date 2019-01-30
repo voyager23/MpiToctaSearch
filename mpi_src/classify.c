@@ -197,8 +197,20 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	gsl_matrix_complex_get_col(buffer, m, 1);
 	// vector copy
 	for(int i = 0; i < 4; ++i) 
-		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i)); 
+		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i));
 
+			
+	// -----Debug print of assembled workspace
+	printf("P_I_S Initial Workspace\n");
+	for(int row = 0; row < 6; ++row) {
+		for(int col = 0; col < 4; ++col) {
+			gsl_complex *p = gsl_vector_complex_ptr(wspace, row*4 + col);
+			printf("%2.0f,%2.0f ", GSL_REAL(*p), GSL_IMAG(*p));
+		}
+		printf("\n");
+	}
+	// -----------------------------------------------------------------
+	
 	// sort each row into ascending order
 	for(int r = 0; r < 6; ++r) 		
 		qsort(gsl_vector_complex_ptr(wspace, (r*4)), 4, sizeof(gsl_complex), compare_gsl_complex);
@@ -213,7 +225,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	// return 20 char digest
 	strncpy(digest, result, 20);
 
-	printf("\nWorkspace\n");
+	printf("Fully Sorted Workspace\n");
 	for(int row = 0; row < 6; ++row) {
 		for(int col = 0; col < 4; ++col) {
 			gsl_complex *p = gsl_vector_complex_ptr(wspace, row*4 + col);

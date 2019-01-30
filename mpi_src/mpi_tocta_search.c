@@ -210,8 +210,9 @@ int main(int argc, char* argv[])
 		
 	// end work process
 				
-	} else { //================ Root Process ===============//
+	} else { 
 		
+	//======================== Root Process ==========================//	
 		int result_code;
 		gsl_vector_complex *compact = NULL;
 		
@@ -309,23 +310,27 @@ int main(int argc, char* argv[])
 				int idx = final_solutions[(4*i)+row];
 				// idx references a group of 4 complex values in vector compact
 				// extract and save 4 complex values to workspace row j
+				NL;
 				for(int col = 0; col < 4; ++col) {
 					gsl_complex foo = gsl_vector_complex_get(compact, idx+col);
 					printf("i:%d   row:%d   idx:%d   col:%d   real:%2.0f   imag:%2.0f\n", i, row, idx, col, GSL_REAL(foo), GSL_IMAG(foo));	
 					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, idx+col));
 				}
-				
 				// Allocate digest
 				gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*20)));
 				// Calculate the signature
 				posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
 			}
 		}
-
-
-		 
 		
+		// TODO: qsort the digests
+		// Each digest is dynamically allocated so assume non-contiguous
+		// Copy digests to a contiguous array for qsort function
 		
+		for(int j = 0; j < digest_ptrs->size; ++j) {		
+			for(int i = 0; i < 20; ++i) printf("%02x ", (((char*)gsl_vector_ulong_get(digest_ptrs, j))[i])&0x00ff);
+			printf("\n");
+		}
 		// Cleanup code
 		free(final_solutions);
 		free(part_solns);

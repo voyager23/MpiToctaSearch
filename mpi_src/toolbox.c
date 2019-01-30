@@ -104,3 +104,14 @@ int count_pairs_by_row(gsl_matrix_complex** wspace, int nrows) {
 	}
 	return pair_count;
 }
+//===============================================================
+int compare_digests(const void *l, const void *r) {
+	/* Used by qsort.
+	 * compare two 20 byte digests
+	 * if l<r return -1
+	 * if l>r return +1
+	 * else return 0
+	 */
+	return strncmp((const char*)l, (const char*)r, 20);
+}
+//================================================================

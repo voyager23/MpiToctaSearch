@@ -45,16 +45,15 @@
 	// Declarations
 	int cmp_gsv(const void* p1, const void* p2);
 	int compare_gsl_complex(const void* plc, const void* prc);
-	
+		
 	// Compare 2 equal matrixes row by row.Using memcmp we can 'rank'
 	// the matrixes in a consistent way, using the return value for qsort
 	// and bsearch
 	// Return value <0: m1 < m2		>0: m1 > m2		0: m1 == m2
 	int compare_gsl_matrix_complex(const void* m1, const void* m2);
-	
+		
 	int count_pairs_by_row(gsl_matrix_complex** wspace, int rows);
-
-
+	int compare_digests(const void *l, const void *r);
 
 #endif
 
