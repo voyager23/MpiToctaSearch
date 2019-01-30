@@ -326,13 +326,22 @@ int main(int argc, char* argv[])
 		// TODO: qsort the digests
 		// Each digest is dynamically allocated so assume non-contiguous
 		// Copy digests to a contiguous array for qsort function
-		// Repo test on pi/sandisk128
 		
-		for(int j = 0; j < digest_ptrs->size; ++j) {		
-			for(int i = 0; i < 20; ++i) printf("%02x ", (((char*)gsl_vector_ulong_get(digest_ptrs, j))[i])&0x00ff);
+		char *qsort_array = malloc(sizeof(char)*20*final_count);
+		char *dest = qsort_array;
+		for(int j = 0; j < digest_ptrs->size; ++j) {
+			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), 20);
+			dest += 20;
+		}
+		qsort(qsort_array, final_count, 20, compare_digests);
+			
+		
+		for(int j = 0; j < final_count; ++j) {		
+			for(int i = 0; i < 20; ++i) printf("%02x ", *(qsort_array + (j*20 + i))&0x00ff);
 			printf("\n");
 		}
 		// Cleanup code
+		free(qsort_array);
 		free(final_solutions);
 		free(part_solns);
 						

@@ -111,7 +111,10 @@ int compare_digests(const void *l, const void *r) {
 	 * if l<r return -1
 	 * if l>r return +1
 	 * else return 0
+	 * l and r are interpreted as pointers to char*
 	 */
-	return strncmp((const char*)l, (const char*)r, 20);
+	 const char *lptr = (const char*)l;
+	 const char *rptr = (const char*)r;
+	return strncmp(lptr, rptr, 20);
 }
 //================================================================
