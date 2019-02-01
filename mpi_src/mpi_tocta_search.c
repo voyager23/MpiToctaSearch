@@ -387,21 +387,16 @@ int main(int argc, char* argv[])
 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
-		for(int i = 0; i < final_count; ++i) {
-			
+		for(int i = 0; i < final_count; ++i) {			
 			
 			// Construct the workspace matrix
-			for(int row = 0; row < 4; ++row) {	// row index
-				int idx = final_solutions[(4*i)+row];
-				// idx references a group of 4 complex values in vector compact
-				// extract and save 4 complex values to workspace row j
+			for(int row = 0; row < 4; ++row) {	// workspace row index
+				int idx_compact = final_solutions[(4*i)+row];
+				printf("idx_compact: %d\t", idx_compact);
+				// set row j to 4 complex numbers
+				for(int col = 0; col < 4; ++col)
+					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, ((idx_compact*4) + col)));
 				NL;
-				for(int col = 0; col < 4; ++col) {
-					gsl_complex foo = gsl_vector_complex_get(compact, idx+col);
-					printf("i:%d   row:%d   idx:%d   col:%d   real:%2.0f   imag:%2.0f\n", i, row, idx, col, GSL_REAL(foo), GSL_IMAG(foo));	
-					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, idx+col));
-				}
-
 			} // for row = 0...
 			
 			// Allocate digest
@@ -409,9 +404,9 @@ int main(int argc, char* argv[])
 			// Calculate the signature
 			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
 			
-		} //for i = 0...
+		} //for i = 0 to final_count-1
 		
-		// TODO: qsort the digests
+		// qsort the digests
 		// Each digest is dynamically allocated so assume non-contiguous
 		// Copy digests to a contiguous array for qsort function
 		

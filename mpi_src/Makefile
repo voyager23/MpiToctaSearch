@@ -2,7 +2,7 @@
 
 .PHONY : clean all go
 
-CFLAGS = -std=c11 -O2 -g
+CFLAGS = -std=c11 -O2 -ggdb
 CFLAGS += `pkg-config --cflags glib-2.0 gsl openssl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl openssl`
@@ -55,7 +55,7 @@ go :
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
 
 #@Localhost only
-	mpirun -np 2 ../bin/mts -t 09,19
+	mpirun -np 2 ../bin/mts -t 06,50
 
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
 
