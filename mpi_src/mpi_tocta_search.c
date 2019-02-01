@@ -116,7 +116,11 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 		return -1;
 	}
 }
+<<<<<<< HEAD
 	
+=======
+
+>>>>>>> fd6a0ebddd8d281be618015316a41ddba5dcc01a
 //==============================================================================
 int main(int argc, char* argv[])
 {
@@ -184,13 +188,23 @@ int main(int argc, char* argv[])
 		
 		local_eqsums = gsl_vector_ulong_calloc(complex_count / 4);
 		for(int i = 0; i < compact->size; i += 4) {
-			gsl_vector_complex* p_gvc = gsl_vector_complex_calloc(4);
-			double* dest = p_gvc->data;
+			gsl_vector_complex* gvc_ptr = gsl_vector_complex_calloc(4);
+			double* dest = gvc_ptr->data;
 			double* src  = (double*)gsl_vector_complex_ptr(compact, i);
 			memcpy(dest, src, sizeof(double) * 4 * 2);
-			gsl_vector_ulong_set(local_eqsums, (i/4), (ulong)p_gvc);
+			gsl_vector_ulong_set(local_eqsums, (i/4), (ulong)gvc_ptr);
 		}
 		gsl_vector_complex_free(compact);
+		
+		// DEBUG Output the local-equal sums
+		printf("Debug output of local_eqsums.\n");
+		for(int i = 0; i < local_eqsums->size; ++i) {
+			gsl_vector_complex* gvc_ptr = (gsl_vector_complex*)gsl_vector_ulong_get(local_eqsums, i);
+			for(int j = 0; j < gvc_ptr->size; ++j) PRT_COMPLEX(gsl_vector_complex_get(gvc_ptr,j));
+			NL;
+		}
+		NL;
+		printf("--------------------\n");
 		
 		// Solution subset search
 		// establish the range of indexes used for the 'a' pointer.
@@ -224,8 +238,10 @@ int main(int argc, char* argv[])
 									  gsl_matrix_complex_get(wspace,2,0)) != 1) continue;
 					if(count_pairs_by_row(&wspace,3) != 2) continue;
 					++triples; // This triple is a candidate
+					
 					// Reuse the result_code variable
 					result_code = solution_test(&wspace, &local_eqsums, &local_target);
+
 					if(result_code >= 0 ) { // result_code has index
 						solutions += 1;
 						if((quiet==0)&&(solutions % 100 == 0)) {
@@ -233,12 +249,18 @@ int main(int argc, char* argv[])
 						 if(solutions % 1000 == 0) printf("\n");
 						 fflush(stdout);
 						}
-						gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
-						gsl_matrix_complex_memcpy(wspace_copy, wspace);
+						//gsl_matrix_complex* wspace_copy = gsl_matrix_complex_alloc(4,4);
+						//gsl_matrix_complex_memcpy(wspace_copy, wspace);
 						// Add solution to g_array
 						new_soln[3] = result_code;
 						g_array_append_val(soln_array, new_soln);
+						
+						//Debug output of solution matrix using indexes in new_soln[4]
+						//
+						//------------------------------------------------------------
+						
 					}
+					
 				} // for c...
 			} // for b...
 		} // for a...
@@ -246,7 +268,7 @@ int main(int argc, char* argv[])
 		
 #if(1)
 			// if rank==1 output data about the soln_array
-			if(rank == 1) {
+			if(rank != 0) {
 				printf("\n=====Process %d soln_array=====\n", rank);
 				for(int i = 0; i < soln_array->len; ++i) {
 					Soln *temp = (Soln*)g_array_index(soln_array, Soln, i);
@@ -418,4 +440,7 @@ int main(int argc, char* argv[])
 	MPI_Finalize();
 
 }
+<<<<<<< HEAD
 //==============================================================================
+=======
+>>>>>>> fd6a0ebddd8d281be618015316a41ddba5dcc01a
