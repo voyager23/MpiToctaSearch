@@ -116,11 +116,7 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 		return -1;
 	}
 }
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> fd6a0ebddd8d281be618015316a41ddba5dcc01a
 //==============================================================================
 int main(int argc, char* argv[])
 {
@@ -197,13 +193,15 @@ int main(int argc, char* argv[])
 		gsl_vector_complex_free(compact);
 		
 		// DEBUG Output the local-equal sums
-		printf("Debug output of local_eqsums.\n");
+		printf("Debug output of process local_eqsums.\n");
 		for(int i = 0; i < local_eqsums->size; ++i) {
 			gsl_vector_complex* gvc_ptr = (gsl_vector_complex*)gsl_vector_ulong_get(local_eqsums, i);
+			printf("%3d) ",i);
 			for(int j = 0; j < gvc_ptr->size; ++j) PRT_COMPLEX(gsl_vector_complex_get(gvc_ptr,j));
 			NL;
 		}
 		NL;
+		printf("Target: "); PRT_COMPLEX(local_target); NL;
 		printf("--------------------\n");
 		
 		// Solution subset search
@@ -390,6 +388,8 @@ int main(int argc, char* argv[])
 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
 		for(int i = 0; i < final_count; ++i) {
+			
+			
 			// Construct the workspace matrix
 			for(int row = 0; row < 4; ++row) {	// row index
 				int idx = final_solutions[(4*i)+row];
@@ -440,7 +440,4 @@ int main(int argc, char* argv[])
 	MPI_Finalize();
 
 }
-<<<<<<< HEAD
 //==============================================================================
-=======
->>>>>>> fd6a0ebddd8d281be618015316a41ddba5dcc01a
