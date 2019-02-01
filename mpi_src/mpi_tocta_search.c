@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
 			gsl_vector_ulong_set(local_eqsums, (i/4), (ulong)gvc_ptr);
 		}
 		gsl_vector_complex_free(compact);
-		
+#if(0)
 		// DEBUG Output the local-equal sums
 		printf("Debug output of process local_eqsums.\n");
 		for(int i = 0; i < local_eqsums->size; ++i) {
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
 		NL;
 		printf("Target: "); PRT_COMPLEX(local_target); NL;
 		printf("--------------------\n");
-		
+#endif	
 		// Solution subset search
 		// establish the range of indexes used for the 'a' pointer.
 		// first = rank-1; limit is local_eqsums->size; stride is world_size-1
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 		} // for a...
 		
 		
-#if(1)
+#if(0)
 			// if rank==1 output data about the soln_array
 			if(rank != 0) {
 				printf("\n=====Process %d soln_array=====\n", rank);
@@ -338,6 +338,7 @@ int main(int argc, char* argv[])
 		printf("Final solution count for ");
 		PRT_COMPLEX(target);
 		printf(": %d\n", final_count);
+		printf("Expected group count %d\n", final_count/48);		
 		
 		// Allocate space for solutions then receive index groups from worker nodes.
 		
@@ -349,18 +350,15 @@ int main(int argc, char* argv[])
 		}
 		
 		qsort(final_solutions, final_count, sizeof(Soln), cmp_solns);
-		
+#if(0)	
 		printf("Indexes of all solutions.\n");
 		for(int i = 0; i < final_count; ++i) {
 			for(int j = 0; j < 4; ++j) printf("%d ", final_solutions[(4*i)+j]);
 			printf("\n");
-		}
-		
-		
+		}		
 		printf("Final solution count for ");
 		PRT_COMPLEX(target);
-		printf(": %d\n", final_count);
-	
+#endif
 		
 		/*
 		 * Code to classify solutions into groups[48]
@@ -392,15 +390,14 @@ int main(int argc, char* argv[])
 			// Construct the workspace matrix
 			for(int row = 0; row < 4; ++row) {	// workspace row index
 				int idx_compact = final_solutions[(4*i)+row];
-				printf("idx_compact: %d\t", idx_compact);
+				// printf("idx_compact: %d\t", idx_compact);
 				// set row j to 4 complex numbers
 				for(int col = 0; col < 4; ++col)
 					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, ((idx_compact*4) + col)));
-				NL;
 			} // for row = 0...
 			
 			// Allocate digest
-			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*20)));
+			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*SHA_DIGEST_LENGTH)));
 			// Calculate the signature
 			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
 			
@@ -418,11 +415,17 @@ int main(int argc, char* argv[])
 		}
 		qsort(qsort_array, final_count, 20, compare_digests);
 			
-		
-		for(int j = 0; j < final_count; ++j) {		
-			for(int i = 0; i < 20; ++i) printf("%02x ", *(qsort_array + (j*20 + i))&0x00ff);
-			printf("\n");
+		char current_digest[20] = "0000000000000000000";
+		int signature_count = 0;
+		for(int j = 0; j < final_count; ++j) {
+			if(compare_digests(current_digest, qsort_array+(j*20)) != 0) {
+				for(int i = 0; i < 20; ++i) printf("%02x ", *(qsort_array + (j*20 + i))&0x00ff);
+				printf("\n");
+				strncpy(current_digest, qsort_array+(j*20), 20);
+				signature_count += 1;
+			}
 		}
+		printf("Signature count: %d\n", signature_count);
 		// Cleanup code
 		free(qsort_array);
 		free(final_solutions);

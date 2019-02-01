@@ -199,7 +199,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	for(int i = 0; i < 4; ++i) 
 		gsl_vector_complex_set(wspace, (20 + i), gsl_vector_complex_get(buffer, i));
 
-			
+#if(0)			
 	// -----Debug print of assembled workspace
 	printf("P_I_S Initial Workspace\n");
 	for(int row = 0; row < 6; ++row) {
@@ -210,6 +210,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		printf("\n");
 	}
 	// -----------------------------------------------------------------
+#endif
 	
 	// sort each row into ascending order
 	for(int r = 0; r < 6; ++r) 		
@@ -220,11 +221,15 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	
 	// calc sha128 hash for matrix wspace
 	unsigned char result[SHA_DIGEST_LENGTH];
-	SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
+	// SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
+	SHA_CTX context;
+	SHA1_Init(&context);
+	SHA1_Update(&context, (const char *)(wspace->data), sizeof(gsl_complex)*24);
+	SHA1_Final(result,&context);
 	
 	// return 20 char digest
 	strncpy(digest, result, 20);
-
+#if(0)
 	printf("Fully Sorted Workspace\n");
 	for(int row = 0; row < 6; ++row) {
 		for(int col = 0; col < 4; ++col) {
@@ -233,7 +238,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		}
 		printf("\n");
 	}
-	//printf("\n");
+#endif
 	gsl_vector_complex_free(wspace);
 }
 //======================================================================
