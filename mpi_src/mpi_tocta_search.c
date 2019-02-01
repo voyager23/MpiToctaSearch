@@ -25,7 +25,7 @@
 #include "../mpi_include/mpi_tocta_search.h"
 #include "../libcrc/include/checksum.h"
 
-
+//----------------------------------------------------------------------
 int cmp_solns(const void *left, const void *right) {
 	
 	/* qsort()-style comparison function 
@@ -52,8 +52,72 @@ int cmp_solns(const void *left, const void *right) {
 	return 0;
 	
 }
-	
 
+//----------------------------------------------------------------------
+int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target) {
+	
+	/*
+	 * Calculate a set of values for row3.
+	 * if row3 found in equalsums
+	 * 		update wspace and check for exactly 4 pairs of values
+	 * 		if 4 pairs found return 1 else return 0
+	 * else
+	 * 		clear row3 in wspace
+	 * 		return 0
+	 * endif
+	 * 
+	 * Modified to return index into equalsums if success
+	 * 	esle return -1 on fail;
+	 */
+	
+	gsl_complex zero = gsl_complex_rect(0.0,0.0);
+	gsl_vector_complex* row3 = gsl_vector_complex_alloc(4);
+	
+	gsl_vector_complex_set(row3, 0, gsl_matrix_complex_get(*wspace,2,2));	// set d
+	gsl_vector_complex_set(row3, 2, gsl_matrix_complex_get(*wspace,0,0));	// set a
+	
+	// calc and set value y = target - (f + h + j)
+	gsl_complex y = *target;
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 0, 1));
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 1, 1));
+	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 2, 1));
+	gsl_vector_complex_set(row3, 1, y);	// set y
+	
+	// calc and set value x = target - (e + g + i)
+	gsl_complex x = *target;
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 0, 3));
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 1, 3));
+	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 2, 3));
+	gsl_vector_complex_set(row3, 3, x);	// set x
+	
+	// search equalsums for the corresponding row
+	
+	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
+	
+	if((found != NULL)) {
+
+		int i;	// index into equalsums		
+		// Using a non-NULL pointer attempt to recover the index into equalsums
+		for(i = 0; i < (*equalsums)->size; ++i) {
+			if(gsl_vector_ulong_ptr(*equalsums,i) == found) break;
+		}
+		
+		gsl_matrix_complex_set_row(*wspace, 3, row3);
+		gsl_vector_complex_free(row3);
+		if(count_pairs_by_row(wspace,4) == 4) {
+			return i;
+		}else{
+			return -1;
+		}
+		
+	} else {
+		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
+		gsl_vector_complex_free(row3);
+		return -1;
+	}
+}
+	
+//==============================================================================
 int main(int argc, char* argv[])
 {
 	#define TAG_NDOUBLES 2
@@ -112,8 +176,8 @@ int main(int argc, char* argv[])
 		
 		// Create a checksum
 		uint32_t chksum = crc_32((const unsigned char *)compact->data, (compact->size)*16);
-		if(quiet==0) printf("BCast received @ (%d) - Checksum %0X\n", rank, chksum);
-		if(quiet==0) printf("local_target: "); //PRT_COMPLEX(local_target); NL;
+		if(quiet==0) printf("BCast received @ process(%d) - Checksum %0X\n", rank, chksum);
+		if(quiet==0) printf("local_target: "); PRT_COMPLEX(local_target); NL;
 		
 		// Reformat the compact vector into the equalsums format 
 		// which is a gsl_vector_ulong of gsl_vector_complex.
@@ -138,8 +202,8 @@ int main(int argc, char* argv[])
 		int solutions = 0;
 		
 		if(quiet==0) printf("Search of equalsums - %lu lines\n", (local_eqsums)->size);
-		int triples = 0;		
-		//for(int a = 0; a < nsums; ++a) {
+		int triples = 0;
+		
 		for(int a = (rank-1); a < nsums; a+=(size-1)) {
 			new_soln[0] = a;
 			for(int b = 0; b < nsums; ++b) {
@@ -177,7 +241,6 @@ int main(int argc, char* argv[])
 					}
 				} // for c...
 			} // for b...
-
 		} // for a...
 		
 		
@@ -316,12 +379,15 @@ int main(int argc, char* argv[])
 					printf("i:%d   row:%d   idx:%d   col:%d   real:%2.0f   imag:%2.0f\n", i, row, idx, col, GSL_REAL(foo), GSL_IMAG(foo));	
 					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, idx+col));
 				}
-				// Allocate digest
-				gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*20)));
-				// Calculate the signature
-				posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
-			}
-		}
+
+			} // for row = 0...
+			
+			// Allocate digest
+			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*20)));
+			// Calculate the signature
+			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
+			
+		} //for i = 0...
 		
 		// TODO: qsort the digests
 		// Each digest is dynamically allocated so assume non-contiguous
@@ -352,68 +418,4 @@ int main(int argc, char* argv[])
 	MPI_Finalize();
 
 }
-
-//----------------------------------------------------------------------
-int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target) {
-	
-	/*
-	 * Calculate a set of values for row3.
-	 * if row3 found in equalsums
-	 * 		update wspace and check for exactly 4 pairs of values
-	 * 		if 4 pairs found return 1 else return 0
-	 * else
-	 * 		clear row3 in wspace
-	 * 		return 0
-	 * endif
-	 * 
-	 * Modified to return index into equalsums if success
-	 * 	esle return -1 on fail;
-	 */
-	
-	gsl_complex zero = gsl_complex_rect(0.0,0.0);
-	gsl_vector_complex* row3 = gsl_vector_complex_alloc(4);
-	
-	gsl_vector_complex_set(row3, 0, gsl_matrix_complex_get(*wspace,2,2));	// set d
-	gsl_vector_complex_set(row3, 2, gsl_matrix_complex_get(*wspace,0,0));	// set a
-	
-	// calc and set value y = target - (f + h + j)
-	gsl_complex y = *target;
-	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 0, 1));
-	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 1, 1));
-	y = gsl_complex_sub(y, gsl_matrix_complex_get(*wspace, 2, 1));
-	gsl_vector_complex_set(row3, 1, y);	// set y
-	
-	// calc and set value x = target - (e + g + i)
-	gsl_complex x = *target;
-	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 0, 3));
-	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 1, 3));
-	x = gsl_complex_sub(x, gsl_matrix_complex_get(*wspace, 2, 3));
-	gsl_vector_complex_set(row3, 3, x);	// set x
-	
-	// search equalsums for the corresponding row
-	
-	void* found = bsearch(&row3, (*equalsums)->data, (*equalsums)->size, sizeof(ulong), cmp_gsv);
-	
-	if((found != NULL)) {
-
-		int i;	// index into equalsums		
-		// Using a non-NULL pointer attempt to recover the index into equalsums
-		for(i = 0; i < (*equalsums)->size; ++i) {
-			if(gsl_vector_ulong_ptr(*equalsums,i) == found) break;
-		}
-		
-		gsl_matrix_complex_set_row(*wspace, 3, row3);
-		gsl_vector_complex_free(row3);
-		if(count_pairs_by_row(wspace,4) == 4) {
-			return i;
-		}else{
-			return -1;
-		}
-		
-	} else {
-		for(int i = 0; i < 4; ++i) gsl_matrix_complex_set(*wspace, 3, i, zero);
-		gsl_vector_complex_free(row3);
-		return -1;
-	}
-}
-
+//==============================================================================
