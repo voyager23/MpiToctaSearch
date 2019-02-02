@@ -228,7 +228,8 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	SHA1_Final(result,&context);
 	
 	// return 20 char digest
-	strncpy(digest, result, 20);
+	strncpy(digest, result, SHA_DIGEST_LENGTH);
+	
 #if(0)
 	printf("Fully Sorted Workspace\n");
 	for(int row = 0; row < 6; ++row) {
@@ -239,6 +240,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		printf("\n");
 	}
 #endif
+
 	gsl_vector_complex_free(wspace);
 }
 //======================================================================

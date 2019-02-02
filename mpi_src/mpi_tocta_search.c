@@ -407,21 +407,21 @@ int main(int argc, char* argv[])
 		// Each digest is dynamically allocated so assume non-contiguous
 		// Copy digests to a contiguous array for qsort function
 		
-		char *qsort_array = malloc(sizeof(char)*20*final_count);
+		char *qsort_array = malloc(sizeof(char)*SHA_DIGEST_LENGTH*final_count);
 		char *dest = qsort_array;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
-			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), 20);
-			dest += 20;
+			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), SHA_DIGEST_LENGTH);
+			dest += SHA_DIGEST_LENGTH;
 		}
-		qsort(qsort_array, final_count, 20, compare_digests);
-			
-		char current_digest[20] = "0000000000000000000";
+		qsort(qsort_array, final_count, SHA_DIGEST_LENGTH, compare_digests);
+
+		char current_digest[SHA_DIGEST_LENGTH];
 		int signature_count = 0;
 		for(int j = 0; j < final_count; ++j) {
-			if(compare_digests(current_digest, qsort_array+(j*20)) != 0) {
-				for(int i = 0; i < 20; ++i) printf("%02x ", *(qsort_array + (j*20 + i))&0x00ff);
+			if((j == 0)||(compare_digests(current_digest, qsort_array+(j*SHA_DIGEST_LENGTH)) != 0)) {
+				for(int i = 0; i < SHA_DIGEST_LENGTH; ++i) printf("%02x ", *(qsort_array + (j*SHA_DIGEST_LENGTH + i))&0x00ff);
 				printf("\n");
-				strncpy(current_digest, qsort_array+(j*20), 20);
+				strncpy(current_digest, qsort_array+(j*SHA_DIGEST_LENGTH), SHA_DIGEST_LENGTH);
 				signature_count += 1;
 			}
 		}
