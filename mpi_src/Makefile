@@ -3,9 +3,10 @@
 .PHONY : clean all go
 
 CFLAGS = -std=c11 -O2 -ggdb
-CFLAGS += `pkg-config --cflags glib-2.0 gsl openssl`
+CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
-LIBS +=  `pkg-config --libs glib-2.0 gsl openssl`
+LIBS +=  `pkg-config --libs glib-2.0 gsl `
+LIBS += -lgcrypt
 
 OBJECTS = mpi_tocta_search.o get_options.o toolbox.o compact_equalsums.o classify.o
 
@@ -55,7 +56,7 @@ go :
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
 
 #@Localhost only
-	mpirun -np 4 ../bin/mts -t 09,23 -q
+	mpirun -np 4 ../bin/mts -t 06,50
 
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,19
 

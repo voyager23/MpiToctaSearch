@@ -385,6 +385,23 @@ int main(int argc, char* argv[])
 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
+		// If using libgcrypt - initialise here
+		/* Version check should be the very first call because it
+		 makes sure that important subsystems are initialized. */
+		if (!gcry_check_version (GCRYPT_VERSION))
+		{
+		  fputs ("libgcrypt version mismatch\n", stderr);
+		  exit (2);
+		}
+
+		/* Disable secure memory.  */
+		gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
+
+		/* Tell Libgcrypt that initialization has completed. */
+		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+		
+		const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	
 		for(int i = 0; i < final_count; ++i) {			
 			
 			// Construct the workspace matrix
@@ -397,31 +414,34 @@ int main(int argc, char* argv[])
 			} // for row = 0...
 			
 			// Allocate digest
-			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*SHA_DIGEST_LENGTH)));
+			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
 			// Calculate the signature
-			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
+			// posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
 			
 		} //for i = 0 to final_count-1
+		
+		// If using libgcrypt - cleanup here
+		
 		
 		// qsort the digests
 		// Each digest is dynamically allocated so assume non-contiguous
 		// Copy digests to a contiguous array for qsort function
 		
-		char *qsort_array = malloc(sizeof(char)*SHA_DIGEST_LENGTH*final_count);
+		char *qsort_array = malloc(sizeof(char)*dlen*final_count);
 		char *dest = qsort_array;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
-			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), SHA_DIGEST_LENGTH);
-			dest += SHA_DIGEST_LENGTH;
+			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
+			dest += dlen;
 		}
-		qsort(qsort_array, final_count, SHA_DIGEST_LENGTH, compare_digests);
+		qsort(qsort_array, final_count, dlen, compare_digests);
 
-		char current_digest[SHA_DIGEST_LENGTH];
+		char current_digest[dlen];
 		int signature_count = 0;
 		for(int j = 0; j < final_count; ++j) {
-			if((j == 0)||(compare_digests(current_digest, qsort_array+(j*SHA_DIGEST_LENGTH)) != 0)) {
-				for(int i = 0; i < SHA_DIGEST_LENGTH; ++i) printf("%02x ", *(qsort_array + (j*SHA_DIGEST_LENGTH + i))&0x00ff);
+			if((j == 0)||(compare_digests(current_digest, qsort_array+(j*dlen)) != 0)) {
+				for(int i = 0; i < dlen; ++i) printf("%02x ", *(qsort_array + (j*dlen + i))&0x00ff);
 				printf("\n");
-				strncpy(current_digest, qsort_array+(j*SHA_DIGEST_LENGTH), SHA_DIGEST_LENGTH);
+				strncpy(current_digest, qsort_array+(j*dlen), dlen);
 				signature_count += 1;
 			}
 		}

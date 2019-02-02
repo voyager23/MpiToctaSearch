@@ -34,6 +34,8 @@
 	#include <gsl/gsl_complex_math.h>
 	#include <gsl/gsl_matrix.h>
 	
+	#include <gcrypt.h>
+	
 	#include "../mpi_include/toolbox.h"	
 	#include "../mpi_include/get_options.h"
 	#include "../mpi_include/compact_equalsums.h"

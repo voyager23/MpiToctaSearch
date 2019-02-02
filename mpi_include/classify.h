@@ -27,7 +27,10 @@
 	
 	#include <stdio.h>
 	#include <glib.h>
-	#include <openssl/sha.h>
+	// #include <openssl/sha.h>
+	
+	#include <gcrypt.h>
+	
 	#include "../include/toolbox.h"
 
 	void classify_all_solutions(GList** AllSolutions, GList** SolutionLists);	

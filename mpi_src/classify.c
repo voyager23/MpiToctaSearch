@@ -220,15 +220,18 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	qsort(gsl_vector_complex_ptr(wspace,0), 6, (sizeof(gsl_complex) * 4), cmp4complex);
 	
 	// calc sha128 hash for matrix wspace
-	unsigned char result[SHA_DIGEST_LENGTH];
+	const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	unsigned char result[dlen];
 	// SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
-	SHA_CTX context;
-	SHA1_Init(&context);
-	SHA1_Update(&context, (const char *)(wspace->data), sizeof(gsl_complex)*24);
-	SHA1_Final(result,&context);
+	// SHA_CTX context;
+	// SHA1_Init(&context);
+	// SHA1_Update(&context, (const char *)(wspace->data), sizeof(gsl_complex)*24);
+	// SHA1_Final(result,&context);
 	
-	// return 20 char digest
-	strncpy(digest, result, SHA_DIGEST_LENGTH);
+	gcry_md_hash_buffer(GCRY_MD_SHA256, result, (const void *)(wspace->data), sizeof(gsl_complex)*24);
+	
+	// copy result to digest
+	strncpy(digest, result, dlen);
 	
 #if(0)
 	printf("Fully Sorted Workspace\n");
