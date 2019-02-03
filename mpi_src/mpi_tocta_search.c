@@ -295,7 +295,8 @@ int main(int argc, char* argv[])
 				
 	} else { 
 		
-	//======================== Root Process ==========================//	
+	//======================== Root Process ==========================//
+	
 		int result_code;
 		gsl_vector_complex *compact = NULL;
 		
@@ -350,6 +351,7 @@ int main(int argc, char* argv[])
 		}
 		
 		qsort(final_solutions, final_count, sizeof(Soln), cmp_solns);
+		
 #if(0)	
 		printf("Indexes of all solutions.\n");
 		for(int i = 0; i < final_count; ++i) {
@@ -363,31 +365,16 @@ int main(int argc, char* argv[])
 		/*
 		 * Code to classify solutions into groups[48]
 		 * Data: compact, final_solutions, final_count
-		 * 		gsl_vector_complex *compact
-		 * 		int final_count = 0;
-		 * 		int *final_solutions = malloc(sizeof(int)*4*final_count);
-		 * -------------------------------------------------------------------------
-		 * Allocate gsl_vector_ulong(final_count) {digest_ptrs}
-		 * 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
-		 * Allocate gsl_matrix-complex as workspace
-		 * 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
-		 * for each line of final_solutions
-		 * 		allocate memory for digest and save pointer in gsl_vector_ulong
-		 * 		get 4 indexes
-		 * 		update the workspace
-		 * 		call posn_independant_signature(workspace, *digest)	{see gcrypt2.c}
-		 * 
-		 * for each entry in digest_ptrs
-		 * 		print the signature
-		 * -------------------------------------------------------------------------
 		 */
 		 
 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
-		// If using libgcrypt - initialise here
-		/* Version check should be the very first call because it
-		 makes sure that important subsystems are initialized. */
+		/* If using libgcrypt - initialise here
+		 * Version check should be the very first call because it
+		 * makes sure that important subsystems are initialized.
+		 */
+		 
 		if (!gcry_check_version (GCRYPT_VERSION))
 		{
 		  fputs ("libgcrypt version mismatch\n", stderr);
@@ -416,7 +403,7 @@ int main(int argc, char* argv[])
 			// Allocate digest
 			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
 			// Calculate the signature
-			// posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
+			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
 			
 		} //for i = 0 to final_count-1
 		

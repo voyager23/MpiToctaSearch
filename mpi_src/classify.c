@@ -219,21 +219,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 	// resort 6 rows into ascending order
 	qsort(gsl_vector_complex_ptr(wspace,0), 6, (sizeof(gsl_complex) * 4), cmp4complex);
 	
-	// calc sha128 hash for matrix wspace
-	const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
-	unsigned char result[dlen];
-	// SHA1((const char *)(wspace->data), sizeof(gsl_complex)*24, result);
-	// SHA_CTX context;
-	// SHA1_Init(&context);
-	// SHA1_Update(&context, (const char *)(wspace->data), sizeof(gsl_complex)*24);
-	// SHA1_Final(result,&context);
-	
-	gcry_md_hash_buffer(GCRY_MD_SHA256, result, (const void *)(wspace->data), sizeof(gsl_complex)*24);
-	
-	// copy result to digest
-	strncpy(digest, result, dlen);
-	
-#if(0)
+#if(1)
 	printf("Fully Sorted Workspace\n");
 	for(int row = 0; row < 6; ++row) {
 		for(int col = 0; col < 4; ++col) {
@@ -243,6 +229,15 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest) {
 		printf("\n");
 	}
 #endif
+
+	// calc digest for matrix wspace
+	const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	unsigned char result[dlen];
+	
+	gcry_md_hash_buffer(GCRY_MD_SHA256, result, (const void *)(wspace->data), sizeof(gsl_complex)*24);
+	
+	// copy result back to digest
+	strncpy(digest, result, dlen);
 
 	gsl_vector_complex_free(wspace);
 }
