@@ -34,7 +34,7 @@
 	#include "../include/toolbox.h"
 
 	void classify_all_solutions(GList** AllSolutions, GList** SolutionLists);	
-	void posn_independant_signature(gsl_matrix_complex *m, char *digest);
+	void posn_independant_signature(gsl_matrix_complex *m, char *digest, int algo);
 	int cmp4complex(const void *left, const void *right);
 
 #endif

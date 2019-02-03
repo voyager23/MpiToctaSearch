@@ -120,6 +120,7 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 //==============================================================================
 int main(int argc, char* argv[])
 {
+	#define HASH_ALGO GCRY_MD_SHA256
 	#define TAG_NDOUBLES 2
 	#define TAG_DDATA 4
 	#define TAG_NSOLNS 8
@@ -387,7 +388,7 @@ int main(int argc, char* argv[])
 		/* Tell Libgcrypt that initialization has completed. */
 		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
 		
-		const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+		const int dlen = gcry_md_get_algo_dlen(HASH_ALGO);
 	
 		for(int i = 0; i < final_count; ++i) {			
 			
@@ -403,7 +404,7 @@ int main(int argc, char* argv[])
 			// Allocate digest
 			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
 			// Calculate the signature
-			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i));
+			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
 			
 		} //for i = 0 to final_count-1
 		
