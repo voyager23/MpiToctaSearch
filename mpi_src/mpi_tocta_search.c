@@ -418,7 +418,7 @@ int main(int argc, char* argv[])
 		char *qsort_array = malloc(sizeof(char)*dlen*final_count);
 		char *dest = qsort_array;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
-			strncpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
+			memcpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
 			dest += dlen;
 		}
 		qsort(qsort_array, final_count, dlen, compare_digests);
@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
 			if((j == 0)||(compare_digests(current_digest, qsort_array+(j*dlen)) != 0)) {
 				for(int i = 0; i < dlen; ++i) printf("%02x ", *(qsort_array + (j*dlen + i))&0x00ff);
 				printf("\n");
-				strncpy(current_digest, qsort_array+(j*dlen), dlen);
+				memcpy(current_digest, qsort_array+(j*dlen), dlen);
 				signature_count += 1;
 			}
 		}

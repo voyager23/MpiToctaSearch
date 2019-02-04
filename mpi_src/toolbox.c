@@ -107,14 +107,14 @@ int count_pairs_by_row(gsl_matrix_complex** wspace, int nrows) {
 //===============================================================
 int compare_digests(const void *l, const void *r) {
 	/* Used by qsort.
-	 * compare two 20 byte digests
+	 * compare two 20/32 byte digests
 	 * if l<r return -1
 	 * if l>r return +1
 	 * else return 0
 	 * l and r are interpreted as pointers to char*
 	 */
-	 const char *lptr = (const char*)l;
-	 const char *rptr = (const char*)r;
-	return strncmp(lptr, rptr, 20);
+	 const void *lptr = (const char*)l;
+	 const void *rptr = (const char*)r;
+	return memcmp(lptr, rptr, 32);
 }
 //================================================================

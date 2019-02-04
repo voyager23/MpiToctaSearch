@@ -237,7 +237,7 @@ void posn_independant_signature(gsl_matrix_complex *m, char *digest, int algo) {
 	gcry_md_hash_buffer(algo, result, (const void *)(wspace->data), sizeof(gsl_complex)*24);
 	
 	// copy result back to digest
-	strncpy(digest, result, dlen);
+	memcpy(digest, result, dlen);
 
 	gsl_vector_complex_free(wspace);
 }
