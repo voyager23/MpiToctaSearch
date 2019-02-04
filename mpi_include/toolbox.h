@@ -53,7 +53,8 @@
 	int compare_gsl_matrix_complex(const void* m1, const void* m2);
 		
 	int count_pairs_by_row(gsl_matrix_complex** wspace, int rows);
-	int compare_digests(const void *l, const void *r);
+	int compare_digests_32(const void *l, const void *r);
+	int compare_digests_20(const void *l, const void *r);
 
 #endif
 

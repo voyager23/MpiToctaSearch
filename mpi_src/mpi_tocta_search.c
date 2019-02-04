@@ -121,6 +121,13 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 int main(int argc, char* argv[])
 {
 	#define HASH_ALGO GCRY_MD_SHA256
+	
+	#if(HASH_ALGO == GCRY_MD_SHA256)
+		#define COMP_FUNC compare_digests_32
+	#else
+		#define COMP_FUNC compare_digests_20
+	#endif
+	
 	#define TAG_NDOUBLES 2
 	#define TAG_DDATA 4
 	#define TAG_NSOLNS 8
@@ -421,12 +428,12 @@ int main(int argc, char* argv[])
 			memcpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
 			dest += dlen;
 		}
-		qsort(qsort_array, final_count, dlen, compare_digests);
+		qsort(qsort_array, final_count, dlen, COMP_FUNC);
 
 		char current_digest[dlen];
 		int signature_count = 0;
 		for(int j = 0; j < final_count; ++j) {
-			if((j == 0)||(compare_digests(current_digest, qsort_array+(j*dlen)) != 0)) {
+			if((j == 0)||(COMP_FUNC(current_digest, qsort_array+(j*dlen)) != 0)) {
 				for(int i = 0; i < dlen; ++i) printf("%02x ", *(qsort_array + (j*dlen + i))&0x00ff);
 				printf("\n");
 				memcpy(current_digest, qsort_array+(j*dlen), dlen);
