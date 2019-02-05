@@ -396,10 +396,8 @@ int main(int argc, char* argv[])
 		  fputs ("libgcrypt version mismatch\n", stderr);
 		  exit (2);
 		}
-
 		/* Disable secure memory.  */
 		gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
-
 		/* Tell Libgcrypt that initialization has completed. */
 		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
 		
@@ -422,8 +420,6 @@ int main(int argc, char* argv[])
 			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
 			
 		} //for i = 0 to final_count-1
-		
-		// If using libgcrypt - cleanup here		
 		
 		// qsort the digests
 		// Each digest is dynamically allocated so assume non-contiguous
