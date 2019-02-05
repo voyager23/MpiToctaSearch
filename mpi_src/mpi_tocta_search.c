@@ -120,8 +120,10 @@ int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* ta
 //==============================================================================
 int main(int argc, char* argv[])
 {
-	#define HASH_ALGO GCRY_MD_SHA1
 	
+	#define HASH_ALGO GCRY_MD_SHA256
+	//#define HASH_ALGO GCRY_MD_SHA1
+
 	#define TAG_NDOUBLES 2
 	#define TAG_DDATA 4
 	#define TAG_NSOLNS 8
@@ -136,9 +138,7 @@ int main(int argc, char* argv[])
     gsl_complex target;
     int quiet = 0;
     int list  = 0;
- 
-    int (*compare_func_ptr)(const void*, const void*) = compare_digests_20;
-    
+  
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -299,7 +299,20 @@ int main(int argc, char* argv[])
 	} else { 
 		
 	//======================== Root Process ==========================//
-	
+		
+		// Select the correct comparison function for the hash.
+		
+		int (*compare_func_ptr)(const void*, const void*) = NULL;
+
+		if(HASH_ALGO==GCRY_MD_SHA1) {
+			compare_func_ptr = compare_digests_20;
+			printf("\nCompiled for SHA1.\n");
+		} else {
+			compare_func_ptr = compare_digests_32;
+			printf("\nCompiled for SHA256.\n");
+
+		}
+		
 		int result_code;
 		gsl_vector_complex *compact = NULL;
 		
@@ -390,7 +403,7 @@ int main(int argc, char* argv[])
 		/* Tell Libgcrypt that initialization has completed. */
 		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
 		
-		const int dlen = gcry_md_get_algo_dlen(GCRY_MD_SHA1);
+		const int dlen = gcry_md_get_algo_dlen(HASH_ALGO);
 	
 		for(int i = 0; i < final_count; ++i) {			
 			
@@ -406,7 +419,7 @@ int main(int argc, char* argv[])
 			// Allocate digest
 			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
 			// Calculate the signature
-			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), GCRY_MD_SHA1);
+			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
 			
 		} //for i = 0 to final_count-1
 		
@@ -422,12 +435,12 @@ int main(int argc, char* argv[])
 			memcpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
 			dest += dlen;
 		}
-		qsort(qsort_array, final_count, dlen, compare_digests_20);
+		qsort(qsort_array, final_count, dlen, compare_func_ptr);
 
 		char current_digest[dlen];
 		int signature_count = 0;
 		for(int j = 0; j < final_count; ++j) {
-			if((j == 0)||(compare_digests_20(current_digest, qsort_array+(j*dlen)) != 0)) {
+			if((j == 0)||(compare_func_ptr(current_digest, qsort_array+(j*dlen)) != 0)) {
 				for(int i = 0; i < dlen; ++i) printf("%02x ", *(qsort_array + (j*dlen + i))&0x00ff);
 				printf("\n");
 				memcpy(current_digest, qsort_array+(j*dlen), dlen);
