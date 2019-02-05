@@ -133,3 +133,22 @@ int compare_digests_20(const void *l, const void *r) {
 	return memcmp(lptr, rptr, 20);
 }
 //================================================================
+int compare_digest_ptrs_sha256(const void *l, const void *r){
+	// The void pointer is pointer to ulong which is cast as char*
+	const unsigned long *lp = l;
+	const unsigned long *rp = r;
+	const void *lptr = (const void*)(*lp);
+	const void *rptr = (const void*)(*rp);
+	return memcmp(lptr, rptr, 32);
+}
+//==================================================================
+
+
+
+
+
+
+
+
+
+

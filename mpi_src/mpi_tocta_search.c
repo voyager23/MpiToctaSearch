@@ -386,11 +386,7 @@ int main(int argc, char* argv[])
 		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
 		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
-		/* If using libgcrypt - initialise here
-		 * Version check should be the very first call because it
-		 * makes sure that important subsystems are initialized.
-		 */
-		 
+		/* If using libgcrypt - initialise here */		 
 		if (!gcry_check_version (GCRYPT_VERSION))
 		{
 		  fputs ("libgcrypt version mismatch\n", stderr);
@@ -404,7 +400,6 @@ int main(int argc, char* argv[])
 		const int dlen = gcry_md_get_algo_dlen(HASH_ALGO);
 	
 		for(int i = 0; i < final_count; ++i) {			
-			
 			// Construct the workspace matrix
 			for(int row = 0; row < 4; ++row) {	// workspace row index
 				int idx_compact = final_solutions[(4*i)+row];
@@ -416,12 +411,29 @@ int main(int argc, char* argv[])
 			
 			// Allocate digest
 			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
-			// Calculate the signature
+			// Calculate the signature and save to digest
 			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
 			
 		} //for i = 0 to final_count-1
 		
-		// qsort the digests
+		char current_digest[dlen];
+		// qsort digest_ptrs
+		printf("Digest_ptrs signatures.\n");
+		int signature_count = 0;
+		qsort(gsl_vector_ulong_ptr(digest_ptrs,0), final_count, sizeof(unsigned long), compare_digest_ptrs_sha256);
+		for(int j = 0; j < digest_ptrs->size; ++j) {
+			char *d = (char*)gsl_vector_ulong_get(digest_ptrs,j );
+			if((j == 0)||(compare_func_ptr(current_digest, d) != 0)) {
+				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d + i)) & 0x00ff);
+				printf("\n");
+				memcpy(current_digest, d, dlen);
+				++signature_count;
+			}
+		}
+		printf("Signature count: %d\n", signature_count);
+		printf("End Digest_ptrs signatures.\n");
+	
+#if(0)
 		// Each digest is dynamically allocated so assume non-contiguous
 		// Copy digests to a contiguous array for qsort function
 		
@@ -431,9 +443,9 @@ int main(int argc, char* argv[])
 			memcpy(dest, (char*)*gsl_vector_ulong_ptr(digest_ptrs, j), dlen);
 			dest += dlen;
 		}
+		// qsort the digest_array
 		qsort(qsort_array, final_count, dlen, compare_func_ptr);
-
-		char current_digest[dlen];
+		// print unique digest values
 		int signature_count = 0;
 		for(int j = 0; j < final_count; ++j) {
 			if((j == 0)||(compare_func_ptr(current_digest, qsort_array+(j*dlen)) != 0)) {
@@ -444,8 +456,12 @@ int main(int argc, char* argv[])
 			}
 		}
 		printf("Signature count: %d\n", signature_count);
-		// Cleanup code
+		
 		free(qsort_array);
+#endif
+	
+		// Cleanup code
+
 		free(final_solutions);
 		free(part_solns);
 						

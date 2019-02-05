@@ -55,6 +55,8 @@
 	int count_pairs_by_row(gsl_matrix_complex** wspace, int rows);
 	int compare_digests_32(const void *l, const void *r);
 	int compare_digests_20(const void *l, const void *r);
+	int compare_digest_ptrs_sha256(const void *l, const void *r);
+
 
 #endif
 
