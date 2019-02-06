@@ -1,4 +1,4 @@
-/*
+ /*
  * mpi_tocta_search.h
  * 
  * Copyright 2018 mike <mike@jupiter>
@@ -51,7 +51,7 @@
 		gsl_matrix_complex *solution;	// Must be allocated prior to use
 		gsl_complex target;				// GSL_SET_COMPLEX(&target, x, y)
 		char pisig[32];					// good for sha128/sha256
-		unsigned nSolns, index;		
+		unsigned nGroups, index;		
 	} Solution_Data;
 		
 #endif

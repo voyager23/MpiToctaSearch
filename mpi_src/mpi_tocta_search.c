@@ -366,25 +366,57 @@ int main(int argc, char* argv[])
 			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
 			
 		} //for i = 0 to final_count-1
-		
-		char current_digest[dlen];
+				
+		FILE *fout = fopen("../results/solution_data.txt", "wb");
+		if(fout == NULL) {
+			printf("fopen returned a NULL file pointer.\n");
+			exit(1);
+		}
 		// qsort digest_ptrs
-		printf("Digest_ptrs signatures.\n");
-		int signature_count = 0;
+		char current_digest[dlen];
 		qsort(gsl_vector_ulong_ptr(digest_ptrs,0), final_count, sizeof(unsigned long), compare_digest_ptrs_sha256);
+		
+		// Note: digest_ptrs is gsl_vector_ulong. The ulong value hold a pointer
+		Solution_Data *sdata = malloc(sizeof(Solution_Data));
+		// set default values here
+		
+		sdata->solution = NULL;
+		sdata->target = target;
+		memset(sdata->pisig, 0, 32);
+		sdata->nGroups = final_count / 48;
+		sdata->index = 0;
+		
+		int signature_count = 0;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
 			char *d = (char*)gsl_vector_ulong_get(digest_ptrs,j );
-			if((j == 0)||(compare_func_ptr(current_digest, d) != 0)) {
+			
+			// compare the digest in Solution_Data with the digest pointed to by 'd'
+			
+			if((j == 0)||(compare_func_ptr(sdata->pisig, d) != 0)) {
+				
 				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d + i)) & 0x00ff);
 				printf("\n");
-				memcpy(current_digest, d, dlen);
-				++signature_count;
+				
+				// TODO - associate a matrix with the digest
+				
+				// Update sdata to latest values
+				// sdata->solution - ?copy wsp to soution?
+				// sdata->target - no change 
+				memcpy(sdata->pisig, d, dlen);
+				// sdata->nGroups - no change
+				// sdata->index = signature_count++
+				
+				
+				
+				// Write a copy of sdata to file
 			}
+				
 		}
+		
 		printf("Signature count: %d\n", signature_count);
-		printf("End Digest_ptrs signatures.\n");
-	
+
 		// Cleanup code
+		fclose(fout);
 		free(final_solutions);
 		free(part_solns);
 						
