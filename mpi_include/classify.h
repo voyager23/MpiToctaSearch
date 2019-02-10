@@ -27,14 +27,21 @@
 	
 	#include <stdio.h>
 	#include <glib.h>
-	// #include <openssl/sha.h>
-	
 	#include <gcrypt.h>
 	
 	#include "../include/toolbox.h"
+	#include "../include/mpi_tocta_search.h"
+	
+	typedef struct tag {
+		char pisig[32];					// good for sha128/sha256
+		gsl_matrix_complex *solution;	// Must be allocated prior to use
+		gsl_complex target;				// GSL_SET_COMPLEX(&target, x, y)
+		unsigned nGroups, index;		
+	} Solution_Data;
 
 	void classify_all_solutions(GList** AllSolutions, GList** SolutionLists);	
 	void posn_independant_signature(gsl_matrix_complex *m, char *digest, int algo);
 	int cmp4complex(const void *left, const void *right);
+	void pi_sig_soln_data(gsl_matrix_complex *m, Solution_Data *digest, int algo);
 
 #endif

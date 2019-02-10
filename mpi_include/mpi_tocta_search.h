@@ -44,14 +44,8 @@
 	typedef int Soln[4];
 	
 	int solution_test(gsl_matrix_complex** wspace, p_gvu* equalsums, gsl_complex* target);
-
 	int cmp_solns(const void *left, const void *right);
 	
-	typedef struct tag {
-		gsl_matrix_complex *solution;	// Must be allocated prior to use
-		gsl_complex target;				// GSL_SET_COMPLEX(&target, x, y)
-		char pisig[32];					// good for sha128/sha256
-		unsigned nGroups, index;		
-	} Solution_Data;
+
 		
 #endif

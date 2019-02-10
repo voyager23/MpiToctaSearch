@@ -320,23 +320,22 @@ int main(int argc, char* argv[])
 		printf(": %d\n", final_count);
 		printf("Expected group count %d\n", final_count/48);		
 		
-		// Allocate space for solutions then receive index groups from worker nodes.
-		
+		// Allocate space for solutions then receive 
+		// index groups(4) from worker nodes.		
 		int *final_solutions = malloc(sizeof(int)*4*final_count);
 		int *next = final_solutions;
+		
 		for(int proc = 1; proc < size; ++proc) {
 			MPI_Recv(next, part_solns[proc-1], MPI_SOLN, proc, TAG_SOLUTIONS, MPI_COMM_WORLD, &status);
 			next += (part_solns[proc-1]*4);
 		}
 		
+		// ???? Is this necessary ???
 		qsort(final_solutions, final_count, sizeof(Soln), cmp_solns);
 		
 		/*
 		 * Code to classify solutions into groups[48]
 		 */
-		 
-		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
-		gsl_matrix_complex *wsp = gsl_matrix_complex_alloc(4,4);
 		
 		/* Using libgcrypt - initialise here */		 
 		if (!gcry_check_version (GCRYPT_VERSION))
@@ -350,70 +349,72 @@ int main(int argc, char* argv[])
 		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
 		
 		const int dlen = gcry_md_get_algo_dlen(HASH_ALGO);
-	
-		for(int i = 0; i < final_count; ++i) {			
-			// Construct the workspace matrix
-			for(int row = 0; row < 4; ++row) {	// workspace row index
-				int idx_compact = final_solutions[(4*i)+row];
-				// set row j to 4 complex numbers
-				for(int col = 0; col < 4; ++col)
-					gsl_matrix_complex_set(wsp, row, col, gsl_vector_complex_get(compact, ((idx_compact*4) + col)));
-			} // for row = 0...
+		
+		gsl_vector_ulong *digest_ptrs = gsl_vector_ulong_calloc(final_count);
+		
+		// Allocate and set Solution_Data structures
+		for(int i = 0; i < final_count; ++i) {
+				
+			Solution_Data *p = malloc(sizeof(Solution_Data));
+			gsl_vector_ulong_set(digest_ptrs, i, (ulong)p);
 			
-			// Allocate digest
-			gsl_vector_ulong_set(digest_ptrs, i, (ulong)(malloc(sizeof(char)*dlen)));
-			// Calculate the signature and save to digest
-			posn_independant_signature(wsp, (char*)gsl_vector_ulong_get(digest_ptrs, i), HASH_ALGO);
+			// clear the digest hash
+			memset(p->pisig, 0xff, 32);
 			
-		} //for i = 0 to final_count-1
+			// allocate a matrix for use by position_independant_signature
+			p->solution = gsl_matrix_complex_calloc(4,4);	
+			GSL_SET_COMPLEX(&(p->target), GSL_REAL(target), GSL_IMAG(target));
+			p->nGroups = final_count/48;
+			p->index = 999999;
+			
+			// use index i into final_solutions to get 4 indexes into gsl_vector_complex compact
+			// each compact index references a group of 4 complex numbers which constitute a matrix row
+			// setup p->solution
+			for(int row = 0; row < 4; ++row) {
+				for(int col = 0; col < 4; ++col) {
+					int idx_compact = final_solutions[i*4 + col];
+					gsl_matrix_complex_set(p->solution, row, col, gsl_vector_complex_get(compact, idx_compact));
+				}
+			}
+			
+			// call p_i_s
+			posn_independant_signature(p->solution, p->pisig, HASH_ALGO);				
+		}
 				
 		FILE *fout = fopen("../results/solution_data.txt", "wb");
 		if(fout == NULL) {
 			printf("fopen returned a NULL file pointer.\n");
 			exit(1);
 		}
-		// qsort digest_ptrs
-		char current_digest[dlen];
-		qsort(gsl_vector_ulong_ptr(digest_ptrs,0), final_count, sizeof(unsigned long), compare_digest_ptrs_sha256);
+				
+		// allocate buffer - an array of ulong to hold 'final_count' pointers
+		// copy pointers from digest_ptrs to buffer
+		ulong *buffer = malloc(sizeof(ulong) * final_count);
+		for(int i = 0; i < final_count; ++i) 
+			memcpy( buffer + i, gsl_vector_ulong_ptr(digest_ptrs, i), sizeof(ulong) );
+			
+		qsort(buffer, final_count, sizeof(ulong), compare_SolnData_ptrs_sha256);
+			
+		// copy back digest to buffer
+		for(int i = 0; i < final_count; ++i)
+			memcpy( gsl_vector_ulong_ptr(digest_ptrs, i), buffer + i, sizeof(ulong) );
 		
-		// Note: digest_ptrs is gsl_vector_ulong. The ulong value hold a pointer
-		Solution_Data *sdata = malloc(sizeof(Solution_Data));
-		// set default values here
-		
-		sdata->solution = NULL;
-		sdata->target = target;
-		memset(sdata->pisig, 0, 32);
-		sdata->nGroups = final_count / 48;
-		sdata->index = 0;
-		
+		// free buffer
+		free(buffer);
+				
 		int signature_count = 0;
+		NL;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
-			char *d = (char*)gsl_vector_ulong_get(digest_ptrs,j );
-			
-			// compare the digest in Solution_Data with the digest pointed to by 'd'
-			
-			if((j == 0)||(compare_func_ptr(sdata->pisig, d) != 0)) {
-				
-				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d + i)) & 0x00ff);
-				printf("\n");
-				
-				// TODO - associate a matrix with the digest
-				
-				// Update sdata to latest values
-				// sdata->solution - ?copy wsp to soution?
-				// sdata->target - no change 
-				memcpy(sdata->pisig, d, dlen);
-				// sdata->nGroups - no change
-				// sdata->index = signature_count++
-				
-				
-				
+			Solution_Data *sdp = (Solution_Data*)gsl_vector_ulong_get(digest_ptrs,j );
+			if(1) {				
+				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(sdp->pisig + i)) & 0x00ff);
+				printf("\n");		
 				// Write a copy of sdata to file
 			}
-				
+			signature_count+=1;
 		}
 		
-		printf("Signature count: %d\n", signature_count);
+		printf("Signature print count: %d\n", signature_count);
 
 		// Cleanup code
 		fclose(fout);

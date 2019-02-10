@@ -1,5 +1,8 @@
 #Makefile for Testcode Folder
 
+csd : cmp_soln_data.c
+	gcc -g cmp_soln_data.c ../mpi_src/toolbox.c `pkg-config --cflags --libs gsl glib-2.0` -lgcrypt -o csd
+
 gcrypt3 : gcrypt3.c
 	gcc -g gcrypt3.c ../mpi_src/toolbox.c `pkg-config --cflags --libs gsl glib-2.0 openssl` -lgcrypt -o g3c
 	

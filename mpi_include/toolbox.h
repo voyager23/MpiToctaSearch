@@ -29,6 +29,8 @@
 	#include <gsl/gsl_matrix.h>
 	#include <openssl/sha.h>
 	#include <string.h>
+	// Bring in Solution_Data declaration
+	#include "../mpi_include/classify.h"
 	
 	typedef unsigned long 		ulong;
 	typedef gsl_vector_complex* p_gvc;
@@ -56,6 +58,7 @@
 	int compare_digests_32(const void *l, const void *r);
 	int compare_digests_20(const void *l, const void *r);
 	int compare_digest_ptrs_sha256(const void *l, const void *r);
+	int compare_SolnData_ptrs_sha256(const void *l, const void *r);
 
 
 #endif

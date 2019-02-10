@@ -133,7 +133,7 @@ int compare_digests_20(const void *l, const void *r) {
 	return memcmp(lptr, rptr, 20);
 }
 //================================================================
-int compare_digest_ptrs_sha256(const void *l, const void *r){
+int compare_digest_ptrs_sha256(const void *l, const void *r) {
 	// The void pointer is pointer to ulong which is cast as char*
 	const unsigned long *lp = l;
 	const unsigned long *rp = r;
@@ -142,6 +142,31 @@ int compare_digest_ptrs_sha256(const void *l, const void *r){
 	return memcmp(lptr, rptr, 32);
 }
 //==================================================================
+int compare_SolnData_ptrs_sha256(const void *l, const void *r) {
+	/* The void pointer points to ulong.
+	 * ulong is cast as pointer to Solution_Data
+	 * Solution_Data -> pisig is char[32] containing the digest
+	 * for this solution
+	 */
+	const Solution_Data *sdl = (Solution_Data*)(*(ulong*)l);
+	const Solution_Data *sdr = (Solution_Data*)(*(ulong*)r);
+	
+	const void *lptr = (const void*)sdl->pisig;
+	const void *rptr = (const void*)sdr->pisig;
+	int rc = memcmp(lptr,rptr,32);
+	
+#if(0)
+	printf("\n");
+	for(int i = 0; i < 32; ++i) printf("%02x ", (*((char*)lptr + i)) & 0x00ff);
+	printf("\n");
+	for(int i = 0; i < 32; ++i) printf("%02x ", (*((char*)rptr + i)) & 0x00ff);
+	printf("\n");
+
+	printf("compare_SolnData_ptrs_sha256: %d\n", rc);
+#endif
+
+	return rc;
+}
 
 
 

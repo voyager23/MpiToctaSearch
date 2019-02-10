@@ -46,7 +46,7 @@ wrap : auto_search.c
 
 #-----------------------------------------------------------------------
 
-go :
+go48 :
 #@mpirun -host jupiter:1,C6100-4:1 ../bin/mts -q -t 09,19
 #@mpirun -host jupiter:6,mint19:6 ../bin/mts -t 09,19 -q
 
@@ -56,10 +56,14 @@ go :
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23 
 
 #@Localhost only
-	mpirun -np 4 ../bin/mts -t 09,23
+	mpirun -np 4 ../bin/mts -t 09,19
 
 #@mpirun -host jupiter:8,mint19:8 ../bin/mts -q -t 09,23
 
-
+go96 :
+#@Localhost only
+	mpirun -np 4 ../bin/mts -t 06,50
+	
+#-----------------------------------------------------------------------
 
 
