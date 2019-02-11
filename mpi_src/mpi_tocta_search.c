@@ -408,14 +408,31 @@ int main(int argc, char* argv[])
 		printf("Digest_ptrs signatures.\n");
 		int signature_count = 0;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
-			char *d = (char*)gsl_vector_ulong_get(digest_ptrs,j );
-			if((j == 0)||(compare_func_ptr(current_digest, d) != 0)) {
-				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d + i)) & 0x00ff);
+			Solution_Data *d = (Solution_Data*)gsl_vector_ulong_get(digest_ptrs,j );
+			if((j == 0)||(memcmp(current_digest, d->pisig, dlen) != 0)) {
+				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d->pisig + i)) & 0x00ff);
 				printf("\n");
-				memcpy(current_digest, d, dlen);
+				memcpy(current_digest, d->pisig, dlen);
 				++signature_count;
-				// Write a copy of soln_data to file
-				// Write signature
+				d->index = signature_count;
+				// Write Target to file
+				fprintf(fout, "Target: ");
+				fprintf(fout, "(%2.0f,%2.0f)\n", GSL_REAL(target), GSL_IMAG(target));
+				// Write solution to file
+				fprintf(fout, "Solution:\n");
+				for(int r = 0; r < 4; ++r) {
+					for(int c = 0; c < 4; ++c) {
+						gsl_complex *cptr = gsl_matrix_complex_ptr(d->solution, r, c);
+						fprintf(fout, "(%2.0f,%2.0f) ", GSL_REAL(*cptr), GSL_IMAG(*cptr));
+					}
+					fprintf(fout, "\n");
+				}
+				// Write signature to file
+				fprintf(fout, "Sig: ");
+				for(int i = 0; i < dlen; ++i) fprintf(fout, "%02x ", (*(d->pisig + i)) & 0x00ff);
+				fprintf(fout, "\n");
+				// Write Index to file
+				fprintf(fout, "Index: %d of %d\n\n", d->index, d->nGroups);
 			}
 		}
 		printf("Signature count: %d\n", signature_count);
