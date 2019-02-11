@@ -370,16 +370,18 @@ int main(int argc, char* argv[])
 			// use index i into final_solutions to get 4 indexes into gsl_vector_complex compact
 			// each compact index references a group of 4 complex numbers which constitute a matrix row
 			// setup p->solution
+			
 			for(int row = 0; row < 4; ++row) {
+				int idx_compact = final_solutions[i*4 + row];
 				for(int col = 0; col < 4; ++col) {
-					int idx_compact = final_solutions[i*4 + col];
-					gsl_matrix_complex_set(p->solution, row, col, gsl_vector_complex_get(compact, idx_compact));
-				}
-			}
+					gsl_matrix_complex_set(p->solution, row, col, 
+						gsl_vector_complex_get(compact, (idx_compact*4 + col)));
+				} // for col...
+			} // for row...
 			
 			// call p_i_s
 			posn_independant_signature(p->solution, p->pisig, HASH_ALGO);				
-		}
+		} // for i...
 				
 		FILE *fout = fopen("../results/solution_data.txt", "wb");
 		if(fout == NULL) {
@@ -401,7 +403,25 @@ int main(int argc, char* argv[])
 		
 		// free buffer
 		free(buffer);
-				
+//===================
+		char current_digest[dlen];
+		// qsort digest_ptrs
+		printf("Digest_ptrs signatures.\n");
+		int signature_count = 0;
+		for(int j = 0; j < digest_ptrs->size; ++j) {
+			char *d = (char*)gsl_vector_ulong_get(digest_ptrs,j );
+			if((j == 0)||(compare_func_ptr(current_digest, d) != 0)) {
+				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(d + i)) & 0x00ff);
+				printf("\n");
+				memcpy(current_digest, d, dlen);
+				++signature_count;
+				// Write a copy of sdata to file
+			}
+		}
+		printf("Signature count: %d\n", signature_count);
+		printf("End Digest_ptrs signatures.\n");
+//===================
+#if(0)			
 		int signature_count = 0;
 		NL;
 		for(int j = 0; j < digest_ptrs->size; ++j) {
@@ -409,11 +429,12 @@ int main(int argc, char* argv[])
 			if(1) {				
 				for(int i = 0; i < dlen; ++i) printf("%02x ", (*(sdp->pisig + i)) & 0x00ff);
 				printf("\n");		
-				// Write a copy of sdata to file
+				
 			}
 			signature_count+=1;
 		}
-		
+#endif
+//=====================	
 		printf("Signature print count: %d\n", signature_count);
 
 		// Cleanup code

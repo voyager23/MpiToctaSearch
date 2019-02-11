@@ -63,6 +63,10 @@ go48 :
 go96 :
 #@Localhost only
 	mpirun -np 4 ../bin/mts -t 06,50
+
+go1536 :
+#@Localhost only
+	mpirun -np 4 ../bin/mts -t 09,23
 	
 #-----------------------------------------------------------------------
 
