@@ -39,10 +39,8 @@ mts : $(OBJS)
 	
 #-----------------------------------------------------------------------	
 	
-wrap : auto_search.c
-	gcc -O2  auto_search.c -o ../bin/auto_search	
-
-
+wrap2 : auto_search_2.c ../mpi_include/auto_search_2.h
+	gcc  -O2 auto_search_2.c -o ../bin/wrap2
 
 #-----------------------------------------------------------------------
 
