@@ -41,7 +41,7 @@ int main( int argc, char *argv[] )
 	char command[256];
 	
 	/* Open the targets file for reading */
-	ftarg = fopen("../data/short_targets.txt", "r");
+	ftarg = fopen("../data/targets.txt", "r");
 	if(ftarg == NULL) {
 	  printf("Error: Targets file not found.\n");
 	  exit(1);
@@ -57,7 +57,7 @@ int main( int argc, char *argv[] )
 		}
 		printf("\nReal: %d Imag: %d\n", real, imag);
 
-		sprintf(command, "mpirun -np 4 ../bin/mts -t %d,%d\n", real, imag);
+		sprintf(command, "mpirun -host jupiter:7,node2:8,node3:8,node4:8 ../bin/mts -t %d,%d\n", real, imag);
 		printf("Command string: %s", command);
 		result = system(command);
 		if ( result == 0 )
