@@ -233,9 +233,9 @@ int main(int argc, char* argv[])
 
 					if(result_code >= 0 ) { // result_code has index
 						solutions += 1;
-						if((quiet==0)&&(solutions % 100 == 0)) {
+						if((quiet==0)&&(solutions % 1000 == 0)) {
 						 printf("\t%d ", solutions);
-						 if(solutions % 1000 == 0) printf("\n");
+						 if(solutions % 4000 == 0) printf("\n");
 						 fflush(stdout);
 						}
 						new_soln[3] = result_code;

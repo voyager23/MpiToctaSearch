@@ -2,7 +2,7 @@
 
 .PHONY : clean all go
 
-CFLAGS = -std=c11 -O2 -ggdb
+CFLAGS = -std=c11 -O2
 CFLAGS += `pkg-config --cflags glib-2.0 gsl`
 LIBS = ../libcrc/lib/libcrc.a
 LIBS +=  `pkg-config --libs glib-2.0 gsl `
