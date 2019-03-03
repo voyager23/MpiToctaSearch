@@ -102,15 +102,13 @@ int main(int argc, char **argv)
 	* create the eqsums list using the combinations
 	* sort list into blocks using total
 	* 
-	* 		TODO: remove blocks with less than 6 entries
-	* 
 	* save to file as blocks of equal total ( gsl_complex_fwrite )
 	*/
 
 	// const char* fname = "./eqsums.bin";
 	FILE* fout = NULL;
 
-	const unsigned long limit = 26.0;
+	const unsigned long limit = 10.0;
 	GList* gprimes = NULL;
 	GList* eqsums = NULL;
 	
@@ -119,9 +117,27 @@ int main(int argc, char **argv)
 		for(unsigned long b = 1; b < limit; ++b) {
 		 int checksum = ((a*a) + (b*b));
 		 if(IsPrime((unsigned long)checksum)) {
-			 gsl_complex* new = malloc(sizeof(gsl_complex));
-			 GSL_SET_COMPLEX(new, (double)a, (double)b);
-			 gprimes = g_list_prepend(gprimes, new);
+			 // Do this for each quadrant of complex space
+			 
+			 gsl_complex* pp = malloc(sizeof(gsl_complex));
+			 GSL_SET_COMPLEX(pp, (double)a, (double)b);
+			 gprimes = g_list_prepend(gprimes, pp);
+			 
+			 
+			 gsl_complex* mp = malloc(sizeof(gsl_complex));
+			 GSL_SET_COMPLEX(mp, -(double)a, (double)b);
+			 gprimes = g_list_prepend(gprimes, mp);
+			 
+			 
+			 gsl_complex* mm = malloc(sizeof(gsl_complex));
+			 GSL_SET_COMPLEX(mm, -(double)a, -(double)b);
+			 gprimes = g_list_prepend(gprimes, mm);
+			 
+			 
+			 gsl_complex* pm = malloc(sizeof(gsl_complex));
+			 GSL_SET_COMPLEX(pm, (double)a, -(double)b);
+			 gprimes = g_list_prepend(gprimes, pm);
+			 
 			}
 		}
 	}
